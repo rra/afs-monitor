@@ -24,7 +24,7 @@ $TIMEOUT = 10;
 # The full path to udebug.  Make sure that this is on local disk so that
 # monitoring doesn't have an AFS dependency.
 ($UDEBUG) = grep { -x $_ } qw(/usr/bin/udebug /usr/local/bin/udebug);
-$UDEBUG ||= '/usr/local/bin/udebug';
+$UDEBUG ||= '/usr/bin/udebug';
 
 ##############################################################################
 # Modules and declarations
