@@ -1,5 +1,11 @@
 #!/usr/local/bin/perl
 # $Id$
+
+use Getopt::Std;
+
+getopts ("t:");
+$Timeout= $opt_t || 60;
+
 $rxdebug = '/usr/local/bin/rxdebug';
 @failures=();
 $hiWaterMark=8;
