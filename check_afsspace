@@ -41,10 +41,10 @@ foreach $l (@infos) {
      $used=$total-$free;
      $percent=int (($used/$total)*100);
      if ($percent >= $CRITICAL) {
-         push (@critical, "$h: $part $percent% full, free $free\n");
+         push (@critical, "$h: $part $percent% full, free $free ");
      }
      elsif ($percent >= $WARNINGS) {
-         push (@warnings, "$h: $part $percent% full, free $free\n");
+         push (@warnings, "$h: $part $percent% full, free $free ");
      }
     push (@final, "$part$percent%"); 
     
