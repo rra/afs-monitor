@@ -160,7 +160,7 @@ to C<perldoc -t>).
 
 =item B<-t> I<timeout>, B<--timeout>=I<timeout>
 
-Change the timeout for the C<rxdebug> command.  The default timeout is 60
+Change the timeout for the B<rxdebug> command.  The default timeout is 60
 seconds.
 
 =item B<-V>, B<--version>
@@ -179,7 +179,7 @@ should be an integer.  The default is 4.
 B<check_rxdebug> follows the standard Nagios exit status requirements.  This
 means that it will exit with status 0 if there are no problems, with status
 1 if there is a warning, and with status 2 if there is a critical problem.
-For other errors, such as invalid syntax, B<check_afsspace> will exit with
+For other errors, such as invalid syntax, B<check_rxdebug> will exit with
 status 3.
 
 =head1 BUGS
