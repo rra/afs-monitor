@@ -54,8 +54,8 @@ if (@critical) {
     print @critical;
     exit 2;
 }
-if (@warning) {
-   print @warning;
+if (@warnings) {
+   print @warnings;
    exit 1;
 }
 foreach $l (@final) {
