@@ -56,5 +56,11 @@ if (@warning) {
    print @warning;
    exit 1;
 }
-print "@infos\n";
+foreach $l (@infos) {
+   chomp($l);
+   $l =~ s/Free space on partition //;
+   $l =~ s/ K blocks out of total /\//;
+   print "$l ";
+}
+print "\n";
 exit 0;
