@@ -88,6 +88,10 @@ alarm ($TIMEOUT);
 # @warnings.  Accumulate all percentages in @all.
 my (@critical, @warnings, @all);
 my @data = `$VOS partinfo '$host' 2> /dev/null`;
+if ($? != 0) {
+    print "AFS CRITICAL: cannot contact server\n";
+    exit 2;
+}
 for (@data) {
     my ($partition, $free, $total) = (split)[4,5,11];
     my $percent = int ((($total - $free) / $total) * 100);
