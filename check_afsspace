@@ -17,12 +17,17 @@
 use Getopt::Std;
 use English;
 
-getopts ("c:");
-getopts ("w:");
-getopts ("H:");
-$WARNING= $opt_c || 85;
-$CRITICAL= $opt_w || 90;
-$h = $opt_H;
+%options=();
+getopts ("c:w:H:", \%options);
+
+$WARNINGS = $options{w} || 85;
+$CRITICAL = $options{c} || 90;
+$h = $options{H};
+
+if ($WARNINGS > $CRITICAL) {
+  print "Warning amount cannot be greater than Critical amount.\n";
+  exit 0;
+}
  
 my $voscmd="/usr/local/bin/vos partinfo";
 my @failures=();
@@ -30,6 +35,7 @@ my ($part, $used, $free, $total, $percent);
 
 @infos=();
 @infos=`$voscmd $h 2> /dev/null`;
+
 foreach $l (@infos) {
     ($part,$free,$total) = (split(/\s+/,$l))[4,5,11];
      $used=$total-$free;
@@ -37,8 +43,8 @@ foreach $l (@infos) {
      if ($percent >= $CRITICAL) {
          push (@critical, "$h: $part $percent% full, free $free\n");
      }
-     elsif ($percent >= $WARNING) {
-         push (@warning, "$h: $part $percent% full, free $free\n");
+     elsif ($percent >= $WARNINGS) {
+         push (@warnings, "$h: $part $percent% full, free $free\n");
      }
 }
 
