@@ -39,8 +39,15 @@ my (@fail, @failclear, @diff);
 for my $server (@ARGV) {
     rename ("$STATUSDIR/$server", "$STATUSDIR/last/$server");
 
+    # Normally we want to run bos status -long.  However, for the afsdb
+    # servers, we restart kaserver nightly and that would cause constant noise
+    # and pages every night.  We could do something complex and filter out
+    # that line, but the easy approach is to just not use -long with afsdb
+    # servers.  We'll still get the important information.
+    my $flag = ($server =~ /^afsdb/) ? '' : '-long';
+
     my $failure = 0;
-    open (BOS, "/usr/local/bin/bos status $server -noauth -long 2>&1 |")
+    open (BOS, "/usr/local/bin/bos status $server -noauth $flag 2>&1 |")
         or die "Cannot fork bos status for $server: $!\n";
     open (OUT, "> $STATUSDIR/$server")
         or die "Cannot create $STATUSDIR/$server: $!\n";
