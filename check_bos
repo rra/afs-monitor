@@ -133,7 +133,7 @@ check_bos - Monitor AFS bos output for problems in Nagios
 
 =head1 SYNOPSIS
 
-check_bos [B<-hv>] [B<-t> I<timeout>] B<-H> I<host>
+check_bos [B<-hV>] [B<-t> I<timeout>] B<-H> I<host>
 
 =head1 DESCRIPTION
 

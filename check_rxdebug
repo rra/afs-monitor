@@ -122,7 +122,7 @@ check_rxdebug - Check AFS servers for blocked connections in Nagios
 
 =head1 SYNOPSIS
 
-check_rxdebug [B<-hv>] [B<-c> I<threshold>] [B<-w> I<threshold>]
+check_rxdebug [B<-hV>] [B<-c> I<threshold>] [B<-w> I<threshold>]
 [B<-t> I<timeout>] B<-H> I<host>
 
 =head1 DESCRIPTION

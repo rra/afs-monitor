@@ -121,7 +121,7 @@ check_afsspace - Monitor AFS disk space usage under Nagios
 
 =head1 SYNOPSIS
 
-check_afsspace [B<-hv>] [B<-c> I<threshold>] [B<-w> I<threshold>]
+check_afsspace [B<-hV>] [B<-c> I<threshold>] [B<-w> I<threshold>]
 [B<-t> I<timeout>] B<-H> I<host>
 
 =head1 DESCRIPTION
