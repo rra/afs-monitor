@@ -31,7 +31,7 @@ $TIMEOUT = 60;
 # The full path to rxdebug.  Make sure that this is on local disk so that
 # monitoring doesn't have an AFS dependency.
 ($RXDEBUG) = grep { -x $_ } qw(/usr/bin/rxdebug /usr/local/bin/rxdebug);
-$RXDEBUG ||= '/usr/local/bin/rxdebug';
+$RXDEBUG ||= '/usr/bin/rxdebug';
 
 ##############################################################################
 # Modules and declarations
