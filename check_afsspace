@@ -1,0 +1,45 @@
+#!/usr/local/bin/perl
+# $Id$
+#
+# Monitor disk space usage. Susan Feng (sfeng@stanford.edu)
+#
+# Arguments are:
+#
+# host [host...] 
+#
+# This script will exit with value 1 if the partions on "host" is above 85%
+# full. 
+#
+# The first output line is a list of the hosts which failed, and
+# how much space is free, in kbytes.
+#
+
+use Getopt::Std;
+use English;
+
+getopts ("l:");
+$LIMIT = $opt_l || 85;
+ 
+my $voscmd="/usr/local/bin/vos partinfo";
+my @failures=();
+my ($part, $used, $free, $total, $percent);
+
+foreach $h (@ARGV) {
+    @infos=();
+    @infos=`$voscmd $h 2> /dev/null`;
+    foreach $l (@infos) {
+        ($part,$free,$total) = (split(/\s+/,$l))[4,5,11];
+        $used=$total-$free;
+        $percent=int (($used/$total)*100);
+        if ($percent >= $LIMIT ) {
+            push (@failures, "$h: $part $percent% full, free $free\n");
+        }
+   }
+}
+
+if (@failures) {
+    print @failures;
+    exit 2;
+}
+print "Partitions OK\n";
+exit 0;
