@@ -1,25 +1,47 @@
-#!/usr/local/bin/perl -w
+#!/usr/bin/perl -w
 $ID = q$Id$;
 #
-# bos.monitor -- Watch for AFS problems by monitoring bos output.
+# check_bos -- Monitor AFS bos output for problems in Nagios.
 #
 # Written by Russ Allbery <rra@stanford.edu>
 # Based on an earlier script by Neil Crellin <neilc@stanford.edu>
+# Copyright 2003, 2004 Board of Trustees, Leland Stanford Jr. University
 #
-# Given a list of AFS servers on the command line, runs bos status on each
-# one.  Checks to see if there is a communication failure, and also checks to
-# see if anything has changed in the bos status output from the previous time
-# that that server was checked.  If either of these conditions are true,
-# print that information to STDOUT.  Suitable for being run inside mon.
+# This program is free software; you may redistribute it and/or modify it
+# under the same terms as Perl itself.
+#
+# Given an AFS server (file or VLDB), runs bos status on each one.  Checks to
+# see if there is a communication failure, and also checks to see if anything
+# in the output looks unusual or wrong.  If either of these conditions are
+# true, print that information to STDOUT.  Suitable for being run inside
+# Nagios.
 
 ##############################################################################
 # Site configuration
 ##############################################################################
 
-# This script maintains various files containing the old bos status output and
-# flag files indicating whether communication failures have already been
-# reported.  These are all saved in a tree rooted here.
-$STATUSDIR = '/usr/local/nagios/status/bos';
+# The full path to bos.  Make sure that this is on local disk so that
+# monitoring doesn't have an AFS dependency.
+($BOS) = grep { -x $_ } qw(/usr/bin/bos /usr/local/bin/bos);
+$BOS ||= '/usr/local/bin/bos';
+
+# The default timeout in seconds (implemented by alarm) for rxdebug.
+$TIMEOUT = 10;
+
+# The list of regular expressions matching expected output.  You may need to
+# customize this for what you're running at your site.  Any output from bos
+# that doesn't match one of these regular expressions will throw a critical
+# error.
+@OKAY = (
+    qr/^\s*$/,
+    qr/^Instance\ \S+,\ \(type\ is\ \S+\)(\ has\ core\ file,)?
+         \ currently\ running\ normally\.$/x,
+    qr/^\s*Auxiliary status is: file server running\.$/,
+    qr/^\s*Process last started at /,
+    qr/^\s*Last exit at /,
+    qr/^\s*Last error exit at /,
+    qr/^\s*Command \d+ is /
+);
 
 ##############################################################################
 # Modules and declarations
@@ -28,92 +50,175 @@ $STATUSDIR = '/usr/local/nagios/status/bos';
 require 5.005;
 
 use strict;
-use vars qw($ID $STATUSDIR);
+use vars qw($BOS $ID @OKAY $TIMEOUT);
+
+use Getopt::Long qw(GetOptions);
 
 ##############################################################################
 # Implementation
 ##############################################################################
 
-# mon passes the list of servers to check on the command line.
-my (@fail, @failclear, @diff);
-for my $server (@ARGV) {
-    rename ("$STATUSDIR/$server", "$STATUSDIR/last/$server");
+# Parse command line options.
+my ($help, $host, $version);
+Getopt::Long::config ('bundling', 'no_ignore_case');
+GetOptions ('hostname|H=s' => \$host,
+            'help|h'       => \$help,
+            'timeout|t=i'  => \$TIMEOUT,
+            'version|V'    => \$version) or exit 3;
+if ($help) {
+    print "Feeding myself to perldoc, please wait....\n";
+    exec ('perldoc', '-t', $0) or die "Cannot fork: $!\n";
+} elsif ($version) {
+    my $version = join (' ', (split (' ', $ID))[1..3]);
+    $version =~ s/,v\b//;
+    $version =~ s/(\S+)$/($1)/;
+    $version =~ tr%/%-%;
+    print $version, "\n";
+    exit 0;
+}
+if (@ARGV) {
+    warn "Usage: $0 [-hv] [-t <timeout>] -H <host>\n";
+    exit 3;
+}
 
-    # Normally we want to run bos status -long.  However, for the afsdb
-    # servers, we restart kaserver nightly and that would cause constant noise
-    # and pages every night.  We could do something complex and filter out
-    # that line, but the easy approach is to just not use -long with afsdb
-    # servers.  We'll still get the important information.
-    my $flag = ($server =~ /^afsdb/) ? '' : '-long';
+# Set up the alarm.
+$SIG{ALRM} = sub {
+    print "BOS CRITICAL: network timeout after $TIMEOUT seconds\n";
+    exit 2;
+};
+alarm ($TIMEOUT);
 
-    my $failure = 0;
-    open (BOS, "/usr/local/bin/bos status $server -noauth $flag 2>&1 |")
-        or die "Cannot fork bos status for $server: $!\n";
-    open (OUT, "> $STATUSDIR/$server")
-        or die "Cannot create $STATUSDIR/$server: $!\n";
-    while (<BOS>) {
-        $failure = 1 if (/bos: failed to contact host\'s bosserver /);
-        print OUT;
-    }
-    close BOS;
-    close OUT;
+# Collect the bos output into a variable.
+unless (open (BOS, "$BOS status $host -noauth -long 2>&1 |")) {
+    warn "$0: cannot run rxdebug\n";
+    exit 3;
+}
+my @bos = <BOS>;
+close BOS;
 
-    # Only report communication failures once, since we may have intended to
-    # take the machine off-line.  Therefore, when reporting a communications
-    # failure, touch a marker file, and only report communication failures if
-    # that marker file doesn't exist.  Report clearing of communication
-    # failures (contactable machine, marker file exists) as well.
-    if (!$failure && -e "$STATUSDIR/$server.commfail") {
-        unlink ("$STATUSDIR/$server.commfail")
-            or die "Cannot delete $STATUSDIR/$server.commfail: $!\n";
-        push (@failclear, $server);
-    } elsif ($failure && !-e "$STATUSDIR/$server.commfail") {
-        open (TOUCH, "> $STATUSDIR/$server.commfail")
-            or die "Cannot create $STATUSDIR/$server.commfail: $!\n";
-        close TOUCH;
-        push (@fail, $server);
-    } elsif (-e "$STATUSDIR/last/$server") {
-        my $current = "$STATUSDIR/$server";
-        my $old = "$STATUSDIR/last/$server";
-        open (DIFF, "/usr/bin/diff $old $current |")
-            or die "Cannot fork diff: $!\n";
-        my @output = <DIFF>;
-        close DIFF;
-        if (@output > 0) {
-            push (@diff, [ $server, @output ]);
+# Make sure that bos was successful.  Note that it generally does return
+# success even if it can't contact the bos server.
+if ($? != 0) {
+    print "BOS CRITICAL: bos status failed\n";
+    exit 2;
+}
+
+# Scan the output.  If we see anything that we don't expect, immediately
+# report it as a fatal error.
+for my $line (@bos) {
+    my $okay = 0;
+    for my $regex (@OKAY) {
+        if ($line =~ /$regex/) {
+            $okay = 1;
+            last;
         }
     }
+    unless ($okay) {
+        $line =~ s/^\s+//;
+        $line =~ s/\s+$//;
+        print "BOS CRITICAL: $line\n";
+        exit 2;
+    }
 }
+print "BOS OK\n";
+exit 0;
 
-# If any of @fail, @failclear, or @diff are non-empty, we have something
-# interesting to report.  Actually explain what's going on in our output so
-# that the mon alert is hopefully readable.  (On the other hand, it also is
-# going to a pager, so be succinct.)
-if (!@fail && !@failclear && !@diff) {
-   print "Bos OK\n";
-   exit 0;
-}
-my $summary = '';
-if (@fail) {
-    $summary = "@fail fail";
-}
-if (@failclear) {
-    $summary .= ', ' if $summary;
-    $summary .= "@failclear clear";
-}
-if (@diff) {
-    $summary .= ', ', if $summary;
-    $summary .= join (' ', map { $$_[0] } @diff) . ' change';
-}
-print "$summary\n";
-if (@fail) {
-    print "Communication failure for:\n\n", join ("\n", @fail), "\n\n";
-}
-if (@failclear) {
-    print "Failure cleared for:\n\n", join ("\n", @failclear), "\n\n";
-}
-for (@diff) {
-    my ($server, @diff) = @$_;
-    print "$server bos status changed:\n\n", @diff, "\n";
-}
-exit 2;
+##############################################################################
+# Documentation
+##############################################################################
+
+=head1 NAME
+
+check_bos - Monitor AFS bos output for problems in Nagios
+
+=head1 SYNOPSIS
+
+check_bos [B<-hv>] [B<-t> I<timeout>] B<-H> I<host>
+
+=head1 DESCRIPTION
+
+B<check_bos> is a Nagios plugin for querying the AFS bosserver for process
+status and reporting an alert if there are any unexpected lines in the bos
+output.  The acceptable lines of output from B<bos> are configured at the
+top of this script; they should be generally suitable for most sites, but
+may require some customization.
+
+B<check_bos> will always print out a single line of output.  If there is a
+line that isn't matched by any regexes identifying acceptable lines, it will
+output the first non-matching line prefixed by C<BOS CRITICAL>.  Otherwise,
+it will output B<BOS OK>.  Note that this monitoring may not catch such
+things as a service being constantly restarted if it happens to be up and
+running normally each time the probe runs; it doesn't pay any attention to
+the last start time, the last error exit status, the presence of core files,
+and the like.  It mostly just looks for the "running normally" part of the
+B<bos> output and makes sure the auxilliary status is also "running
+normally" for a file server process.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-H> I<host>, B<--hostname>=I<host>
+
+The AFS server whose B<bos> status B<check_bos> should check.  This option
+is required.
+
+=item B<-h>, B<--help>
+
+Print out this documentation (which is done simply by feeding the script
+to C<perldoc -t>).
+
+=item B<-t> I<timeout>, B<--timeout>=I<timeout>
+
+Change the timeout for the B<bos> command.  The default timeout is 10
+seconds.
+
+=item B<-V>, B<--version>
+
+Print out the version of B<check_bos> and quit.
+
+=back
+
+=head1 EXIT STATUS
+
+B<check_bos> follows the standard Nagios exit status requirements.  This
+means that it will exit with status 0 if there are no problems or with
+status 2 if there is a problem detected.  For other errors, such as invalid
+syntax, B<check_bos> will exit with status 3.
+
+=head1 BUGS
+
+The standard B<-v> verbose Nagios plugin option is not supported.  It should
+display the complete bos status output.
+
+The usage message for invalid options and for the B<-h> option doesn't
+conform to Nagios standards.
+
+=head1 CAVEATS
+
+This script does not use the Nagios util library or any of the defaults that
+it provides, which makes it somewhat deficient as a Nagios plugin.  This is
+intentional, though, since this script can be used with other monitoring
+systems as well.  It's not clear what a good solution to this would be.
+
+=head1 SEE ALSO
+
+The current version of this and other AFS monitoring plugins for Nagios are
+available from the AFS monitoring tools page at
+L<http://www.eyrie.org/~eagle/software/afs-monitor/>.
+
+=head1 AUTHORS
+
+The original idea behind this script was from Neil Crellin.  Russ Allbery
+<rra@stanford.edu> updated it to work with Nagios and stripped out some
+rather neat but now unnecessary code to look for any changes in the bos
+output, instead just scanning it for acceptable lines.
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2003, 2004 Board of Trustees, Leland Stanford Jr. University.
+
+This program is free software; you may redistribute it and/or modify it
+under the same terms as Perl itself.
+
+=cut
