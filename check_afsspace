@@ -25,7 +25,7 @@ $WARNINGS = 85;
 $CRITICAL = 90;
 
 # The default timeout in seconds (implemented by alarm) for vos partinfo.
-$TIMEOUT = 60;
+$TIMEOUT = 120;
 
 # The full path to vos.  Make sure that this is on local disk so that
 # monitoring doesn't have an AFS dependency.
