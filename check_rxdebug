@@ -86,7 +86,7 @@ alarm ($TIMEOUT);
 
 # Run rxdebug and parse the output, counting the number of waiting for process
 # connections that we have.
-unless (open (RXDEBUG, "$RXDEBUG $host |")) {
+unless (open (RXDEBUG, "$RXDEBUG $host 7001 |")) {
     warn "$0: cannot run rxdebug\n";
     exit 3;
 }
