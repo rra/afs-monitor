@@ -1,0 +1,112 @@
+#!/usr/local/bin/perl -w
+$ID = q$Id$;
+#
+# bos.monitor -- Watch for AFS problems by monitoring bos output.
+#
+# Written by Russ Allbery <rra@stanford.edu>
+# Based on an earlier script by Neil Crellin <neilc@stanford.edu>
+#
+# Given a list of AFS servers on the command line, runs bos status on each
+# one.  Checks to see if there is a communication failure, and also checks to
+# see if anything has changed in the bos status output from the previous time
+# that that server was checked.  If either of these conditions are true,
+# print that information to STDOUT.  Suitable for being run inside mon.
+
+##############################################################################
+# Site configuration
+##############################################################################
+
+# This script maintains various files containing the old bos status output and
+# flag files indicating whether communication failures have already been
+# reported.  These are all saved in a tree rooted here.
+$STATUSDIR = '/usr/local/nagios/status/bos';
+
+##############################################################################
+# Modules and declarations
+##############################################################################
+
+require 5.005;
+
+use strict;
+use vars qw($ID $STATUSDIR);
+
+##############################################################################
+# Implementation
+##############################################################################
+
+# mon passes the list of servers to check on the command line.
+my (@fail, @failclear, @diff);
+for my $server (@ARGV) {
+    rename ("$STATUSDIR/$server", "$STATUSDIR/last/$server");
+
+    my $failure = 0;
+    open (BOS, "/usr/local/bin/bos status $server -noauth -long 2>&1 |")
+        or die "Cannot fork bos status for $server: $!\n";
+    open (OUT, "> $STATUSDIR/$server")
+        or die "Cannot create $STATUSDIR/$server: $!\n";
+    while (<BOS>) {
+        $failure = 1 if (/bos: failed to contact host\'s bosserver /);
+        print OUT;
+    }
+    close BOS;
+    close OUT;
+
+    # Only report communication failures once, since we may have intended to
+    # take the machine off-line.  Therefore, when reporting a communications
+    # failure, touch a marker file, and only report communication failures if
+    # that marker file doesn't exist.  Report clearing of communication
+    # failures (contactable machine, marker file exists) as well.
+    if (!$failure && -e "$STATUSDIR/$server.commfail") {
+        unlink ("$STATUSDIR/$server.commfail")
+            or die "Cannot delete $STATUSDIR/$server.commfail: $!\n";
+        push (@failclear, $server);
+    } elsif ($failure && !-e "$STATUSDIR/$server.commfail") {
+        open (TOUCH, "> $STATUSDIR/$server.commfail")
+            or die "Cannot create $STATUSDIR/$server.commfail: $!\n";
+        close TOUCH;
+        push (@fail, $server);
+    } elsif (-e "$STATUSDIR/last/$server") {
+        my $current = "$STATUSDIR/$server";
+        my $old = "$STATUSDIR/last/$server";
+        open (DIFF, "/usr/bin/diff $old $current |")
+            or die "Cannot fork diff: $!\n";
+        my @output = <DIFF>;
+        close DIFF;
+        if (@output > 0) {
+            push (@diff, [ $server, @output ]);
+        }
+    }
+}
+
+# If any of @fail, @failclear, or @diff are non-empty, we have something
+# interesting to report.  Actually explain what's going on in our output so
+# that the mon alert is hopefully readable.  (On the other hand, it also is
+# going to a pager, so be succinct.)
+if (!@fail && !@failclear && !@diff) {
+   print "Bos OK\n";
+   exit 0;
+}
+my $summary = '';
+if (@fail) {
+    $summary = "@fail fail";
+}
+if (@failclear) {
+    $summary .= ', ' if $summary;
+    $summary .= "@failclear clear";
+}
+if (@diff) {
+    $summary .= ', ', if $summary;
+    $summary .= join (' ', map { $$_[0] } @diff) . ' change';
+}
+print "$summary\n";
+if (@fail) {
+    print "Communication failure for:\n\n", join ("\n", @fail), "\n\n";
+}
+if (@failclear) {
+    print "Failure cleared for:\n\n", join ("\n", @failclear), "\n\n";
+}
+for (@diff) {
+    my ($server, @diff) = @$_;
+    print "$server bos status changed:\n\n", @diff, "\n";
+}
+exit 2;
