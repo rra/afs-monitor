@@ -10,9 +10,9 @@ $ID = q$Id$;
 # This program is free software; you may redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# Expects a list of hosts as command-line arguments and checks the partition
-# usage with vos partinfo.  Exits with status 1 if the free space is below a
-# warning percentage and with status 2 if the free space is above a critical
+# Expects a host with the -H option and checks the partition usage with
+# vos partinfo.  Exits with status 1 if the free space is below a warning
+# percentage and with status 2 if the free space is above a critical
 # percentage (this works with the Nagios check architecture).
 
 ##############################################################################
@@ -78,7 +78,7 @@ if ($WARNINGS > $CRITICAL) {
 
 # Set up the alarm.
 $SIG{ALRM} = sub {
-    warn "AFS CRITICAL: network timeout after $TIMEOUT seconds\n";
+    print "AFS CRITICAL: network timeout after $TIMEOUT seconds\n";
     exit 2;
 };
 alarm ($TIMEOUT);
