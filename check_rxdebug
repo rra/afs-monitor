@@ -1,0 +1,33 @@
+#!/usr/local/bin/perl
+# $Id$
+$rxdebug = '/usr/local/bin/rxdebug';
+@failures=();
+$hiWaterMark=8;
+
+foreach $server (@ARGV) {
+  # Get the output of rxdebug $server -allconn -rxstats
+  open(RXDEBUG, "$rxdebug $server -allconn -rxstats|")
+    || die("Can't open rxdebug\n");
+  $blocked{$server} = 0;
+  while (<RXDEBUG>) {
+      if ( /waiting_for_process/ ) {
+	  $blocked{$server}++;
+      }
+  }
+  close(RXDEBUG);
+}
+
+foreach $server (sort keys %blocked) {
+   $blocked=$blocked{$server};
+   if ($blocked >= $hiWaterMark) {
+     push (@failures, "$server blck: $blocked");
+   }
+}
+
+if (@failures == 0) {
+    print "rxdebug OK\n";
+    exit 0;
+}
+
+print "@failures\n";
+exit 2;
