@@ -10,8 +10,8 @@ $rxdebug = '/usr/local/bin/rxdebug';
 @failures=();
 $hiWaterMark=8;
 
-# Get the output of rxdebug $server -allconn -rxstats
-open(RXDEBUG, "$rxdebug $server -allconn -rxstats|")
+# Get the output of rxdebug $server.
+open(RXDEBUG, "$rxdebug $server |")
   || die("Can't open rxdebug\n");
 $blocked{$server} = 0;
 while (<RXDEBUG>) {
