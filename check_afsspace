@@ -17,29 +17,38 @@
 use Getopt::Std;
 use English;
 
-getopts ("l:");
-$LIMIT = $opt_l || 85;
+getopts ("c:");
+getopts ("w:");
+getopts ("H:");
+$WARNING= $opt_c || 85;
+$CRITICAL= $opt_w || 90;
+$h = $opt_H;
  
 my $voscmd="/usr/local/bin/vos partinfo";
 my @failures=();
 my ($part, $used, $free, $total, $percent);
 
-foreach $h (@ARGV) {
-    @infos=();
-    @infos=`$voscmd $h 2> /dev/null`;
-    foreach $l (@infos) {
-        ($part,$free,$total) = (split(/\s+/,$l))[4,5,11];
-        $used=$total-$free;
-        $percent=int (($used/$total)*100);
-        if ($percent >= $LIMIT ) {
-            push (@failures, "$h: $part $percent% full, free $free\n");
-        }
-   }
+@infos=();
+@infos=`$voscmd $h 2> /dev/null`;
+foreach $l (@infos) {
+    ($part,$free,$total) = (split(/\s+/,$l))[4,5,11];
+     $used=$total-$free;
+     $percent=int (($used/$total)*100);
+     if ($percent >= $CRITICAL) {
+         push (@critical, "$h: $part $percent% full, free $free\n");
+     }
+     elsif ($percent >= $WARNING) {
+         push (@warning, "$h: $part $percent% full, free $free\n");
+     }
 }
 
-if (@failures) {
-    print @failures;
+if (@critical) {
+    print @critical;
     exit 2;
 }
-print "Partitions OK\n";
+if (@warning) {
+   print @warning;
+   exit 1;
+}
+print "@infos\n";
 exit 0;
