@@ -23,7 +23,7 @@ $ID = q$Id$;
 # The full path to bos.  Make sure that this is on local disk so that
 # monitoring doesn't have an AFS dependency.
 ($BOS) = grep { -x $_ } qw(/usr/bin/bos /usr/local/bin/bos);
-$BOS ||= '/usr/local/bin/bos';
+$BOS ||= '/usr/bin/bos';
 
 # The default timeout in seconds (implemented by alarm) for rxdebug.
 $TIMEOUT = 10;
