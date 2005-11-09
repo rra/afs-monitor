@@ -1,18 +1,18 @@
 #!/usr/bin/perl -w
 $ID = q$Id$;
 #
-# check_rxdebug -- Check AFS servers for blocked connections in Nagios.
+# check_rxdebug -- Nagios AFS server check for waiting connections.
 #
 # Written by Quanah Gibson-Mount based on work by Neil Crellin
 # Updated by Russ Allbery <rra@stanford.edu>
-# Copyright 2003, 2004 Board of Trustees, Leland Stanford Jr. University
+# Copyright 2003, 2004, 2005 Board of Trustees, Leland Stanford Jr. University
 #
 # This program is free software; you may redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
 # Expects a file server with the -H option and runs rxdebug against that file
-# server, looking for any connections that are waiting for a process.  Exits
-# with status 1 if there are more than four connections in that state (a
+# server, looking for any connections that are waiting for a thread.  Exits
+# with status 1 if there are more than two connections in that state (a
 # warning) and with status 2 if there are more than eight connections in that
 # state.  The thresholds can be overridden from the command line.
 
@@ -22,7 +22,7 @@ $ID = q$Id$;
 
 # The default count of blocked connections at which to warn or send a critical
 # alert.  These can be overridden with the -w and -c command-line options.
-$WARNINGS = 4;
+$WARNINGS = 2;
 $CRITICAL = 8;
 
 # The default timeout in seconds (implemented by alarm) for rxdebug.
@@ -86,17 +86,24 @@ alarm ($TIMEOUT);
 
 # Run rxdebug and parse the output, counting the number of waiting for process
 # connections that we have.
-unless (open (RXDEBUG, "$RXDEBUG $host 7001 |")) {
+unless (open (RXDEBUG, "$RXDEBUG $host -noconn |")) {
     warn "$0: cannot run rxdebug\n";
     exit 3;
 }
-my $blocked = 0;
+my $blocked;
 while (<RXDEBUG>) {
-    $blocked++ if /waiting_for_process/;
+    if (/^(\d+) calls waiting for a thread/) {
+        $blocked = $1;
+        last;
+    }
 }
 close RXDEBUG;
 if ($? != 0) {
     print "AFS CRITICAL: cannot contact server\n";
+    exit 2;
+}
+unless (defined $blocked) {
+    print "AFS CRITICAL: cannot parse rxdebug output\n";
     exit 2;
 }
 
@@ -132,7 +139,7 @@ there are client connections waiting for a free thread.  If there are more
 than a few of these, AFS performance tends to be very slow; this is a fairly
 reliable way to catch overloaded file servers.  By default, B<check_rxdebug>
 returns a critical error if there are more than eight connections waiting
-for a free thread and a warning if there are more than four.  These
+for a free thread and a warning if there are more than two.  These
 thresholds can be changed with the B<-c> and B<-w> options.
 
 B<check_rxdebug> will always print out a single line of output including the
@@ -170,7 +177,7 @@ Print out the version of B<check_rxdebug> and quit.
 =item B<-w> I<threshold>, B<--warning>=I<threshold>
 
 Change the warning blocked connection threshold to I<threshold>, which
-should be an integer.  The default is 4.
+should be an integer.  The default is 2.
 
 =back
 
@@ -212,7 +219,7 @@ more uniform coding style.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2003, 2004 Board of Trustees, Leland Stanford Jr. University.
+Copyright 2003, 2004, 2005 Board of Trustees, Leland Stanford Jr. University.
 
 This program is free software; you may redistribute it and/or modify it
 under the same terms as Perl itself.
