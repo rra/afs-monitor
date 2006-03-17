@@ -67,7 +67,7 @@ if (@ARGV || !(defined ($host) && defined ($port))) {
 
 # Set up the alarm.
 $SIG{ALRM} = sub {
-    print "UBIK CRITICAL: network timeout after $TIMEOUT seconds\n";
+    print "UBIK CRITICAL - network timeout after $TIMEOUT seconds\n";
     exit 2;
 };
 alarm ($TIMEOUT);
@@ -88,16 +88,16 @@ while (<UDEBUG>) {
 }
 close UDEBUG;
 if ($? != 0) {
-    print "UBIK CRITICAL: udebug failed\n";
+    print "UBIK CRITICAL - udebug failed\n";
     exit 2;
 }
 
 # Check the results.
 if ($issync && !$recovery) {
-    print "UBIK CRITICAL: recovery state not 1f\n";
+    print "UBIK CRITICAL - recovery state not 1f\n";
     exit 2;
 } elsif (!$issync && !$synchost) {
-    print "UBIK CRITICAL: no sync site\n";
+    print "UBIK CRITICAL - no sync site\n";
     exit 2;
 } else {
     print "UBIK OK\n";
@@ -127,7 +127,7 @@ recovery state is 1f if that server is the sync site, or that a sync site is
 known if that server doesn't claim to be the sync site.
 
 B<check_udebug> will always print out a single line of output.  That line
-will be C<UBIK OK> if everything is fine, or C<UBIK CRITICAL: > followed by
+will be C<UBIK OK> if everything is fine, or C<UBIK CRITICAL - > followed by
 an error message otherwise.
 
 =head1 OPTIONS

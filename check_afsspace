@@ -78,7 +78,7 @@ if ($WARNINGS > $CRITICAL) {
 
 # Set up the alarm.
 $SIG{ALRM} = sub {
-    print "AFS CRITICAL: network timeout after $TIMEOUT seconds\n";
+    print "AFS CRITICAL - network timeout after $TIMEOUT seconds\n";
     exit 2;
 };
 alarm ($TIMEOUT);
@@ -89,7 +89,7 @@ alarm ($TIMEOUT);
 my (@critical, @warnings, @all);
 my @data = `$VOS partinfo '$host' 2> /dev/null`;
 if ($? != 0) {
-    print "AFS CRITICAL: cannot contact server\n";
+    print "AFS CRITICAL - cannot contact server\n";
     exit 2;
 }
 for (@data) {
@@ -105,13 +105,13 @@ for (@data) {
 
 # Exit with the appropriate error messages.
 if (@critical) {
-    print "AFS CRITICAL: @critical\n";
+    print "AFS CRITICAL - @critical\n";
     exit 2;
 } elsif (@warnings) {
-    print "AFS WARNING: @warnings\n";
+    print "AFS WARNING - @warnings\n";
     exit 1;
 } else {
-    print "AFS OK: @all\n";
+    print "AFS OK - @all\n";
     exit 0;
 }
 

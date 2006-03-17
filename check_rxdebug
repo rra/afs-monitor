@@ -79,7 +79,7 @@ if ($WARNINGS > $CRITICAL) {
 
 # Set up the alarm.
 $SIG{ALRM} = sub {
-    print "AFS CRITICAL: network timeout after $TIMEOUT seconds\n";
+    print "AFS CRITICAL - network timeout after $TIMEOUT seconds\n";
     exit 2;
 };
 alarm ($TIMEOUT);
@@ -99,23 +99,23 @@ while (<RXDEBUG>) {
 }
 close RXDEBUG;
 if ($? != 0) {
-    print "AFS CRITICAL: cannot contact server\n";
+    print "AFS CRITICAL - cannot contact server\n";
     exit 2;
 }
 unless (defined $blocked) {
-    print "AFS CRITICAL: cannot parse rxdebug output\n";
+    print "AFS CRITICAL - cannot parse rxdebug output\n";
     exit 2;
 }
 
 # Check the connection count against our limits and make sure that it's okay.
 if ($blocked >= $CRITICAL) {
-    print "AFS CRITICAL: $blocked blocked connections\n";
+    print "AFS CRITICAL - $blocked blocked connections\n";
     exit 2;
 } elsif ($blocked >= $WARNINGS) {
-    print "AFS WARNING: $blocked blocked connections\n";
+    print "AFS WARNING - $blocked blocked connections\n";
     exit 1;
 } else {
-    print "AFS OK: $blocked blocked connections\n";
+    print "AFS OK - $blocked blocked connections\n";
     exit 0;
 }
 

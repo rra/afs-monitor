@@ -84,14 +84,14 @@ if (@ARGV) {
 
 # Set up the alarm.
 $SIG{ALRM} = sub {
-    print "BOS CRITICAL: network timeout after $TIMEOUT seconds\n";
+    print "BOS CRITICAL - network timeout after $TIMEOUT seconds\n";
     exit 2;
 };
 alarm ($TIMEOUT);
 
 # Collect the bos output into a variable.
 unless (open (BOS, "$BOS status $host -noauth -long 2>&1 |")) {
-    print "BOS UNKNOWN: cannot run bos\n";
+    print "BOS UNKNOWN - cannot run bos\n";
     exit 3;
 }
 my @bos = <BOS>;
@@ -100,7 +100,7 @@ close BOS;
 # Make sure that bos was successful.  Note that it generally does return
 # success even if it can't contact the bos server.
 if ($? != 0) {
-    print "BOS CRITICAL: bos status failed\n";
+    print "BOS CRITICAL - bos status failed\n";
     exit 2;
 }
 
@@ -117,7 +117,7 @@ for my $line (@bos) {
     unless ($okay) {
         $line =~ s/^\s+//;
         $line =~ s/\s+$//;
-        print "BOS CRITICAL: $line\n";
+        print "BOS CRITICAL - $line\n";
         exit 2;
     }
 }
