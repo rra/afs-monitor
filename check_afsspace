@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-$ID = q$Id$;
+# $ID = q$Id$;
 #
 # check_afsspace -- Monitor AFS disk space usage under Nagios.
 #

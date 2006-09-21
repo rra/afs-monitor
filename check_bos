@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-$ID = q$Id$;
+# $ID = q$Id$;
 #
 # check_bos -- Monitor AFS bos output for problems in Nagios.
 #

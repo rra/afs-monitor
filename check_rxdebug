@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-$ID = q$Id$;
+# $ID = q$Id$;
 #
 # check_rxdebug -- Nagios AFS server check for waiting connections.
 #
