@@ -16,6 +16,16 @@
 # percentage (this works with the Nagios check architecture).
 
 ##############################################################################
+# Modules and declarations
+##############################################################################
+
+require 5.003;
+
+use strict;
+use vars qw($CRITICAL $ID $TIMEOUT $VOS $WARNINGS);
+
+use Getopt::Long qw(GetOptions);
+##############################################################################
 # Site configuration
 ##############################################################################
 
@@ -32,16 +42,6 @@ $TIMEOUT = 300;
 ($VOS) = grep { -x $_ } qw(/usr/bin/vos /usr/local/bin/vos);
 $VOS ||= '/usr/bin/vos';
 
-##############################################################################
-# Modules and declarations
-##############################################################################
-
-require 5.003;
-
-use strict;
-use vars qw($CRITICAL $ID $TIMEOUT $VOS $WARNINGS);
-
-use Getopt::Long qw(GetOptions);
 
 ##############################################################################
 # Implementation

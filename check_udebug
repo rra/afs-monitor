@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-$ID = q$Id$;
+# $ID = q$Id$;
 #
 # check_udebug -- Check AFS database servers using udebug for Nagios.
 #
@@ -15,6 +15,17 @@ $ID = q$Id$;
 # any of the servers don't believe there is a sync site.
 
 ##############################################################################
+# Modules and declarations
+##############################################################################
+
+require 5.003;
+
+use strict;
+use vars qw($ID $TIMEOUT $UDEBUG);
+
+use Getopt::Long qw(GetOptions);
+
+##############################################################################
 # Site configuration
 ##############################################################################
 
@@ -26,16 +37,6 @@ $TIMEOUT = 10;
 ($UDEBUG) = grep { -x $_ } qw(/usr/bin/udebug /usr/local/bin/udebug);
 $UDEBUG ||= '/usr/bin/udebug';
 
-##############################################################################
-# Modules and declarations
-##############################################################################
-
-require 5.003;
-
-use strict;
-use vars qw($ID $TIMEOUT $UDEBUG);
-
-use Getopt::Long qw(GetOptions);
 
 ##############################################################################
 # Implementation
