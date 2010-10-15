@@ -1,11 +1,12 @@
 #!/usr/bin/perl -w
-# $ID = q$Id$;
+our $VERSION = '@VERSION@ @DATE@';
 #
 # check_rxdebug -- Nagios AFS server check for waiting connections.
 #
 # Written by Quanah Gibson-Mount based on work by Neil Crellin
 # Updated by Russ Allbery <rra@stanford.edu>
-# Copyright 2003, 2004, 2005 Board of Trustees, Leland Stanford Jr. University
+# Copyright 2003, 2004, 2005, 2010
+#     Board of Trustees, Leland Stanford Jr. University
 #
 # This program is free software; you may redistribute it and/or modify it
 # under the same terms as Perl itself.
@@ -20,29 +21,28 @@
 # Modules and declarations
 ##############################################################################
 
-require 5.003;
+require 5.006;
 
 use strict;
-use vars qw($CRITICAL $ID $RXDEBUG $TIMEOUT $WARNINGS);
 
 use Getopt::Long qw(GetOptions);
+
 ##############################################################################
 # Site configuration
 ##############################################################################
 
 # The default count of blocked connections at which to warn or send a critical
 # alert.  These can be overridden with the -w and -c command-line options.
-$WARNINGS = 2;
-$CRITICAL = 8;
+our $WARNINGS = 2;
+our $CRITICAL = 8;
 
 # The default timeout in seconds (implemented by alarm) for rxdebug.
-$TIMEOUT = 60;
+our $TIMEOUT = 60;
 
 # The full path to rxdebug.  Make sure that this is on local disk so that
 # monitoring doesn't have an AFS dependency.
-($RXDEBUG) = grep { -x $_ } qw(/usr/bin/rxdebug /usr/local/bin/rxdebug);
+our ($RXDEBUG) = grep { -x $_ } qw(/usr/bin/rxdebug /usr/local/bin/rxdebug);
 $RXDEBUG ||= '/usr/bin/rxdebug';
-
 
 ##############################################################################
 # Implementation
@@ -51,21 +51,19 @@ $RXDEBUG ||= '/usr/bin/rxdebug';
 # Parse command line options.
 my ($help, $host, $version);
 Getopt::Long::config ('bundling', 'no_ignore_case');
-GetOptions ('critical|c=i' => \$CRITICAL,
-            'hostname|H=s' => \$host,
-            'help|h'       => \$help,
-            'timeout|t=i'  => \$TIMEOUT,
-            'version|V'    => \$version,
-            'warning|w=i'  => \$WARNINGS) or exit 3;
+GetOptions ('c|critical=i' => \$CRITICAL,
+            'H|hostname=s' => \$host,
+            'h|help'       => \$help,
+            't|timeout=i'  => \$TIMEOUT,
+            'V|version'    => \$version,
+            'w|warning=i'  => \$WARNINGS) or exit 3;
 if ($help) {
     print "Feeding myself to perldoc, please wait....\n";
     exec ('perldoc', '-t', $0) or die "Cannot fork: $!\n";
 } elsif ($version) {
-    my $version = join (' ', (split (' ', $ID))[1..3]);
-    $version =~ s/,v\b//;
+    my $version = $VERSION;
     $version =~ s/(\S+)$/($1)/;
-    $version =~ tr%/%-%;
-    print $version, "\n";
+    print "check_bos $version\n";
     exit 0;
 }
 if (@ARGV) {
@@ -84,8 +82,8 @@ $SIG{ALRM} = sub {
 };
 alarm ($TIMEOUT);
 
-# Run rxdebug and parse the output, counting the number of waiting for process
-# connections that we have.
+# Run rxdebug and parse the output to find the number of calls waiting for a
+# thread.
 unless (open (RXDEBUG, "$RXDEBUG $host -noconn |")) {
     warn "$0: cannot run rxdebug\n";
     exit 3;
@@ -129,21 +127,21 @@ check_rxdebug - Check AFS servers for blocked connections in Nagios
 
 =head1 SYNOPSIS
 
-check_rxdebug [B<-hV>] [B<-c> I<threshold>] [B<-w> I<threshold>]
-[B<-t> I<timeout>] B<-H> I<host>
+B<check_rxdebug> [B<-hV>] [B<-c> I<threshold>] [B<-w> I<threshold>]
+    [B<-t> I<timeout>] B<-H> I<host>
 
 =head1 DESCRIPTION
 
-B<check_rxdebug> is a Nagios plugin for checking AFS file servers to see if
-there are client connections waiting for a free thread.  If there are more
-than a few of these, AFS performance tends to be very slow; this is a fairly
-reliable way to catch overloaded file servers.  By default, B<check_rxdebug>
-returns a critical error if there are more than eight connections waiting
-for a free thread and a warning if there are more than two.  These
-thresholds can be changed with the B<-c> and B<-w> options.
+B<check_rxdebug> is a Nagios plugin for checking AFS file servers to see
+if there are client connections waiting for a free thread.  If there are
+more than a few of these, AFS performance tends to be very slow; this is a
+fairly reliable way to catch overloaded file servers.  By default,
+B<check_rxdebug> returns a critical error if there are more than eight
+connections waiting for a free thread and a warning if there are more than
+two.  These thresholds can be changed with the B<-c> and B<-w> options.
 
-B<check_rxdebug> will always print out a single line of output including the
-number of blocked connections, displaying whether this is critical, a
+B<check_rxdebug> will always print out a single line of output including
+the number of blocked connections, displaying whether this is critical, a
 warning, or okay.
 
 =head1 OPTIONS
@@ -183,11 +181,11 @@ should be an integer.  The default is 2.
 
 =head1 EXIT STATUS
 
-B<check_rxdebug> follows the standard Nagios exit status requirements.  This
-means that it will exit with status 0 if there are no problems, with status
-1 if there is a warning, and with status 2 if there is a critical problem.
-For other errors, such as invalid syntax, B<check_rxdebug> will exit with
-status 3.
+B<check_rxdebug> follows the standard Nagios exit status requirements.
+This means that it will exit with status 0 if there are no problems, with
+status 1 if there is a warning, and with status 2 if there is a critical
+problem.  For other errors, such as invalid syntax, B<check_rxdebug> will
+exit with status 3.
 
 =head1 BUGS
 
@@ -199,27 +197,29 @@ conform to Nagios standards.
 
 =head1 CAVEATS
 
-This script does not use the Nagios util library or any of the defaults that
-it provides, which makes it somewhat deficient as a Nagios plugin.  This is
-intentional, though, since this script can be used with other monitoring
-systems as well.  It's not clear what a good solution to this would be.
+This script does not use the Nagios util library or any of the defaults
+that it provides, which makes it somewhat deficient as a Nagios plugin.
+This is intentional, though, since this script can be used with other
+monitoring systems as well.  It's not clear what a good solution to this
+would be.
 
 =head1 SEE ALSO
 
-The current version of this and other AFS monitoring plugins for Nagios are
-available from the AFS monitoring tools page at
-L<http://www.eyrie.org/~eagle/software/afs-monitor/>.
+This script is part of the afs-monitor package, which includes various AFS
+monitoring plugins for Nagios.  It is available from the AFS monitoring
+tools page at L<http://www.eyrie.org/~eagle/software/afs-monitor/>.
 
 =head1 AUTHORS
 
-The original idea behind this script was from Neil Crellin.  It was updated
-by Quanah Gibson-Mount to work with Nagios, and then further updated by Russ
-Allbery <rra@stanford.edu> to support more standard options and to use a
-more uniform coding style.
+The original idea behind this script was from Neil Crellin.  It was
+updated by Quanah Gibson-Mount to work with Nagios, and then further
+updated by Russ Allbery <rra@stanford.edu> to support more standard
+options and to use a more uniform coding style.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2003, 2004, 2005 Board of Trustees, Leland Stanford Jr. University.
+Copyright 2003, 2004, 2005, 2010 Board of Trustees, Leland Stanford
+Jr. University.
 
 This program is free software; you may redistribute it and/or modify it
 under the same terms as Perl itself.

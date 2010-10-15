@@ -1,11 +1,11 @@
 #!/usr/bin/perl -w
-# $ID = q$Id$;
+our $VERSION = '@VERSION@ @DATE@';
 #
 # check_bos -- Monitor AFS bos output for problems in Nagios.
 #
 # Written by Russ Allbery <rra@stanford.edu>
 # Based on an earlier script by Neil Crellin <neilc@stanford.edu>
-# Copyright 2003, 2004 Board of Trustees, Leland Stanford Jr. University
+# Copyright 2003, 2004, 2010 Board of Trustees, Leland Stanford Jr. University
 #
 # This program is free software; you may redistribute it and/or modify it
 # under the same terms as Perl itself.
@@ -20,29 +20,29 @@
 # Modules and declarations
 ##############################################################################
 
-require 5.005;
+require 5.006;
 
 use strict;
-use vars qw($BOS $ID @OKAY $TIMEOUT);
 
 use Getopt::Long qw(GetOptions);
+
 ##############################################################################
 # Site configuration
 ##############################################################################
 
 # The full path to bos.  Make sure that this is on local disk so that
 # monitoring doesn't have an AFS dependency.
-($BOS) = grep { -x $_ } qw(/usr/bin/bos /usr/local/bin/bos);
+our ($BOS) = grep { -x $_ } qw(/usr/bin/bos /usr/local/bin/bos);
 $BOS ||= '/usr/bin/bos';
 
 # The default timeout in seconds (implemented by alarm) for rxdebug.
-$TIMEOUT = 10;
+our $TIMEOUT = 10;
 
 # The list of regular expressions matching expected output.  You may need to
 # customize this for what you're running at your site.  Any output from bos
 # that doesn't match one of these regular expressions will throw a critical
 # error.
-@OKAY = (
+our @OKAY = (
     qr/^\s*$/,
     qr/^Instance\ \S+,\ \(type\ is\ \S+\)(\ has\ core\ file,)?
          \ currently\ running\ normally\.$/x,
@@ -53,7 +53,6 @@ $TIMEOUT = 10;
     qr/^\s*Command \d+ is /
 );
 
-
 ##############################################################################
 # Implementation
 ##############################################################################
@@ -61,19 +60,17 @@ $TIMEOUT = 10;
 # Parse command line options.
 my ($help, $host, $version);
 Getopt::Long::config ('bundling', 'no_ignore_case');
-GetOptions ('hostname|H=s' => \$host,
-            'help|h'       => \$help,
-            'timeout|t=i'  => \$TIMEOUT,
-            'version|V'    => \$version) or exit 3;
+GetOptions ('H|hostname=s' => \$host,
+            'h|help'       => \$help,
+            't|timeout=i'  => \$TIMEOUT,
+            'V|version'    => \$version) or exit 3;
 if ($help) {
     print "Feeding myself to perldoc, please wait....\n";
     exec ('perldoc', '-t', $0) or die "Cannot fork: $!\n";
 } elsif ($version) {
-    my $version = join (' ', (split (' ', $ID))[1..3]);
-    $version =~ s/,v\b//;
+    my $version = $VERSION;
     $version =~ s/(\S+)$/($1)/;
-    $version =~ tr%/%-%;
-    print $version, "\n";
+    print "check_bos $version\n";
     exit 0;
 }
 if (@ARGV) {
@@ -134,7 +131,7 @@ check_bos - Monitor AFS bos output for problems in Nagios
 
 =head1 SYNOPSIS
 
-check_bos [B<-hV>] [B<-t> I<timeout>] B<-H> I<host>
+B<check_bos> [B<-hV>] [B<-t> I<timeout>] B<-H> I<host>
 
 =head1 DESCRIPTION
 
@@ -145,15 +142,15 @@ top of this script; they should be generally suitable for most sites, but
 may require some customization.
 
 B<check_bos> will always print out a single line of output.  If there is a
-line that isn't matched by any regexes identifying acceptable lines, it will
-output the first non-matching line prefixed by C<BOS CRITICAL>.  Otherwise,
-it will output B<BOS OK>.  Note that this monitoring may not catch such
-things as a service being constantly restarted if it happens to be up and
-running normally each time the probe runs; it doesn't pay any attention to
-the last start time, the last error exit status, the presence of core files,
-and the like.  It mostly just looks for the "running normally" part of the
-B<bos> output and makes sure the auxilliary status is also "running
-normally" for a file server process.
+line that isn't matched by any regexes identifying acceptable lines, it
+will output the first non-matching line prefixed by C<BOS CRITICAL>.
+Otherwise, it will output B<BOS OK>.  Note that this monitoring may not
+catch such things as a service being constantly restarted if it happens to
+be up and running normally each time the probe runs; it doesn't pay any
+attention to the last start time, the last error exit status, the presence
+of core files, and the like.  It mostly just looks for the "running
+normally" part of the B<bos> output and makes sure the auxilliary status
+is also "running normally" for a file server process.
 
 =head1 OPTIONS
 
@@ -184,29 +181,30 @@ Print out the version of B<check_bos> and quit.
 
 B<check_bos> follows the standard Nagios exit status requirements.  This
 means that it will exit with status 0 if there are no problems or with
-status 2 if there is a problem detected.  For other errors, such as invalid
-syntax, B<check_bos> will exit with status 3.
+status 2 if there is a problem detected.  For other errors, such as
+invalid syntax, B<check_bos> will exit with status 3.
 
 =head1 BUGS
 
-The standard B<-v> verbose Nagios plugin option is not supported.  It should
-display the complete bos status output.
+The standard B<-v> verbose Nagios plugin option is not supported.  It
+should display the complete bos status output.
 
 The usage message for invalid options and for the B<-h> option doesn't
 conform to Nagios standards.
 
 =head1 CAVEATS
 
-This script does not use the Nagios util library or any of the defaults that
-it provides, which makes it somewhat deficient as a Nagios plugin.  This is
-intentional, though, since this script can be used with other monitoring
-systems as well.  It's not clear what a good solution to this would be.
+This script does not use the Nagios util library or any of the defaults
+that it provides, which makes it somewhat deficient as a Nagios plugin.
+This is intentional, though, since this script can be used with other
+monitoring systems as well.  It's not clear what a good solution to this
+would be.
 
 =head1 SEE ALSO
 
-The current version of this and other AFS monitoring plugins for Nagios are
-available from the AFS monitoring tools page at
-L<http://www.eyrie.org/~eagle/software/afs-monitor/>.
+This script is part of the afs-monitor package, which includes various AFS
+monitoring plugins for Nagios.  It is available from the AFS monitoring
+tools page at L<http://www.eyrie.org/~eagle/software/afs-monitor/>.
 
 =head1 AUTHORS
 
@@ -217,7 +215,8 @@ output, instead just scanning it for acceptable lines.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2003, 2004 Board of Trustees, Leland Stanford Jr. University.
+Copyright 2003, 2004, 2010 Board of Trustees, Leland Stanford Jr.
+University.
 
 This program is free software; you may redistribute it and/or modify it
 under the same terms as Perl itself.

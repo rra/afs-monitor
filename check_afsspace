@@ -1,17 +1,17 @@
 #!/usr/bin/perl -w
-# $ID = q$Id$;
+our $VERSION = '@VERSION@ @DATE@';
 #
 # check_afsspace -- Monitor AFS disk space usage under Nagios.
 #
 # Written by Susan Feng <sfeng@stanford.edu>
 # Updated by Russ Allbery <rra@stanford.edu>
-# Copyright 2003, 2004 Board of Trustees, Leland Stanford Jr. University
+# Copyright 2003, 2004, 2010 Board of Trustees, Leland Stanford Jr. University
 #
 # This program is free software; you may redistribute it and/or modify it
 # under the same terms as Perl itself.
 #
-# Expects a host with the -H option and checks the partition usage with
-# vos partinfo.  Exits with status 1 if the free space is below a warning
+# Expects a host with the -H option and checks the partition usage with vos
+# partinfo.  Exits with status 1 if the free space is below a warning
 # percentage and with status 2 if the free space is above a critical
 # percentage (this works with the Nagios check architecture).
 
@@ -19,29 +19,28 @@
 # Modules and declarations
 ##############################################################################
 
-require 5.003;
+require 5.006;
 
 use strict;
-use vars qw($CRITICAL $ID $TIMEOUT $VOS $WARNINGS);
 
 use Getopt::Long qw(GetOptions);
+
 ##############################################################################
 # Site configuration
 ##############################################################################
 
 # The default percentage full at which to warn and at which to send a critical
 # alert.  These can be overridden with the -w and -c command-line options.
-$WARNINGS = 85;
-$CRITICAL = 90;
+our $WARNINGS = 85;
+our $CRITICAL = 90;
 
 # The default timeout in seconds (implemented by alarm) for vos partinfo.
-$TIMEOUT = 300;
+our $TIMEOUT = 300;
 
 # The full path to vos.  Make sure that this is on local disk so that
 # monitoring doesn't have an AFS dependency.
-($VOS) = grep { -x $_ } qw(/usr/bin/vos /usr/local/bin/vos);
+our ($VOS) = grep { -x $_ } qw(/usr/bin/vos /usr/local/bin/vos);
 $VOS ||= '/usr/bin/vos';
-
 
 ##############################################################################
 # Implementation
@@ -50,21 +49,19 @@ $VOS ||= '/usr/bin/vos';
 # Parse command line options.
 my ($help, $host, $version);
 Getopt::Long::config ('bundling', 'no_ignore_case');
-GetOptions ('critical|c=i' => \$CRITICAL,
-            'hostname|H=s' => \$host,
-            'help|h'       => \$help,
-            'timeout|t=i'  => \$TIMEOUT,
-            'version|V'    => \$version,
-            'warning|w=i'  => \$WARNINGS) or exit 3;
+GetOptions ('c|critical=i' => \$CRITICAL,
+            'H|hostname=s' => \$host,
+            'h|help'       => \$help,
+            't|timeout=i'  => \$TIMEOUT,
+            'V|version'    => \$version,
+            'w|warning=i'  => \$WARNINGS) or exit 3;
 if ($help) {
     print "Feeding myself to perldoc, please wait....\n";
     exec ('perldoc', '-t', $0) or die "Cannot fork: $!\n";
 } elsif ($version) {
-    my $version = join (' ', (split (' ', $ID))[1..3]);
-    $version =~ s/,v\b//;
+    my $version = $VERSION;
     $version =~ s/(\S+)$/($1)/;
-    $version =~ tr%/%-%;
-    print $version, "\n";
+    print "check_afsspace $version\n";
     exit 0;
 }
 if (@ARGV) {
@@ -125,21 +122,26 @@ check_afsspace - Monitor AFS disk space usage under Nagios
 
 =head1 SYNOPSIS
 
-check_afsspace [B<-hV>] [B<-c> I<threshold>] [B<-w> I<threshold>]
-[B<-t> I<timeout>] B<-H> I<host>
+B<check_afsspace> [B<-hV>] [B<-c> I<threshold>] [B<-w> I<threshold>]
+    [B<-t> I<timeout>] B<-H> I<host>
 
 =head1 DESCRIPTION
 
 B<check_afsspace> is a Nagios plugin for checking free space on AFS server
 partitions.  It uses C<vos partinfo> to obtain the free space on the
 partitions on an AFS server and will return an alert if the percentage of
-used space exceeds a threshold.  By default, it returns a critical error if
-the used space is over 90% and a warning if it is over 85% (changable with
-the B<-c> and B<-w> options).
+used space exceeds a threshold.  By default, it returns a critical error
+if the used space is over 90% and a warning if it is over 85% (changaable
+with the B<-c> and B<-w> options).
 
-B<check_afsspace> will always print out a single line of output, giving the
-critical errors if any, otherwise giving the warnings if any, otherwise
-listing in an abbreviated form the percentage free space for all partitions.
+If C<vos partinfo> doesn't return within the timeout, B<check_afsspace>
+will return a critical error.  The default timeout is 300 seconds,
+changeable with the B<-t> option.
+
+B<check_afsspace> will always print out a single line of output, giving
+the critical errors if any, otherwise giving the warnings if any,
+otherwise listing in an abbreviated form the percentage free space for all
+partitions.
 
 =head1 OPTIONS
 
@@ -147,8 +149,8 @@ listing in an abbreviated form the percentage free space for all partitions.
 
 =item B<-c> I<threshold>, B<--critical>=I<threshold>
 
-Change the critical percentage threshold to I<threshold>, which should be an
-integer percentage.  The default is 90.
+Change the critical percentage threshold to I<threshold>, which should be
+an integer percentage.  The default is 90.
 
 =item B<-H> I<host>, B<--hostname>=I<host>
 
@@ -162,8 +164,8 @@ to C<perldoc -t>).
 
 =item B<-t> I<timeout>, B<--timeout>=I<timeout>
 
-Change the timeout for the C<vos partinfo> command.  The default timeout is
-10 seconds.
+Change the timeout for the C<vos partinfo> command.  The default timeout
+is 300 seconds.
 
 =item B<-V>, B<--version>
 
@@ -171,8 +173,8 @@ Print out the version of B<check_afsspace> and quit.
 
 =item B<-w> I<threshold>, B<--warning>=I<threshold>
 
-Change the warning percentage threshold to I<threshold>, which should be an
-integer percentage.  The default is 85.
+Change the warning percentage threshold to I<threshold>, which should be
+an integer percentage.  The default is 85.
 
 =back
 
@@ -182,32 +184,33 @@ B<check_afsspace> follows the standard Nagios exit status requirements.
 This means that it will exit with status 0 if there are no problems, with
 status 2 if there is at least one critical partition for that server, and
 with status 1 if there are no critical partitions but at least one warning
-partition.  For other errors, such as invalid syntax, B<check_afsspace> will
-exit with status 3.
+partition.  For other errors, such as invalid syntax, B<check_afsspace>
+will exit with status 3.
 
 =head1 BUGS
 
-The standard B<-v> verbose Nagios plugin option is not supported and should
-be.  (For example, under B<-vv> we would want to show the actual total,
-free, and used byte counts, not just the percentages.)
+The standard B<-v> verbose Nagios plugin option is not supported and
+should be.  (For example, under B<-vv> we would want to show the actual
+total, free, and used byte counts, not just the percentages.)
 
 The usage message for invalid options and for the B<-h> option doesn't
 conform to Nagios standards.
 
 =head1 CAVEATS
 
-This script does not use the Nagios util library or any of the defaults that
-it provides, which makes it somewhat deficient as a Nagios plugin.  This is
-intentional, though, since this script can be used with other monitoring
-systems as well.  It's not clear what a good solution to this would be.
+This script does not use the Nagios util library or any of the defaults
+that it provides, which makes it somewhat deficient as a Nagios plugin.
+This is intentional, though, since this script can be used with other
+monitoring systems as well.  It's not clear what a good solution to this
+would be.
 
 =head1 SEE ALSO
 
 vos(1)
 
-The current version of this and other AFS monitoring plugins for Nagios are
-available from the AFS monitoring tools page at
-L<http://www.eyrie.org/~eagle/software/afs-monitor/>.
+This script is part of the afs-monitor package, which includes various AFS
+monitoring plugins for Nagios.  It is available from the AFS monitoring
+tools page at L<http://www.eyrie.org/~eagle/software/afs-monitor/>.
 
 =head1 AUTHORS
 
@@ -218,7 +221,8 @@ uniform coding style.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2003, 2004 Board of Trustees, Leland Stanford Jr. University.
+Copyright 2003, 2004, 2010 Board of Trustees, Leland Stanford Jr.
+University.
 
 This program is free software; you may redistribute it and/or modify it
 under the same terms as Perl itself.
