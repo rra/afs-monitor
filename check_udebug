@@ -53,7 +53,6 @@ if ($help) {
     exec ('perldoc', '-t', $0) or die "Cannot fork: $!\n";
 } elsif ($version) {
     my $version = $VERSION;
-    $version =~ s/(\S+)$/($1)/;
     print "check_bos $version\n";
     exit 0;
 }
