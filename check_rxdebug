@@ -62,7 +62,7 @@ if ($help) {
     exec ('perldoc', '-t', $0) or die "Cannot fork: $!\n";
 } elsif ($version) {
     my $version = $VERSION;
-    print "check_bos $version\n";
+    print "check_rxdebug $version\n";
     exit 0;
 }
 if (@ARGV) {
