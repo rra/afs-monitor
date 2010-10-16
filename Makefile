@@ -16,6 +16,7 @@ dist:
 	    sed -e 's![@]VERSION[@]!$(VERSION)!g' \
 		-e 's![@]DATE[@]!$(DATE)!g' \
 		$$script > afs-monitor-$(VERSION)/$$script ; \
+	    chmod 755 afs-monitor-$(VERSION)/$$script ; \
 	done
 	cp $(EXTRA) afs-monitor-$(VERSION)/
 	tar cf afs-monitor-$(VERSION).tar afs-monitor-$(VERSION)
