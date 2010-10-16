@@ -1,0 +1,6 @@
+                     User-Visible afs-monitor Changes
+
+afs-monitor 2.0 (unreleased)
+
+    Initial tarball release, based on check_afsspace 1.16, check_bos 1.7,
+    check_rxdebug 1.11, and check_udebug 1.3.

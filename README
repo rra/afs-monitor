@@ -1,0 +1,109 @@
+                         afs-monitor release 2.0
+            (Nagios-compatible probes to monitor AFS servers)
+
+              Maintained by Russ Allbery <rra@stanford.edu>
+
+  Copyright 2003, 2004, 2005, 2006, 2010 Board of Trustees, Leland
+  Stanford Jr. University.  This program is free software; you may
+  redistribute it and/or modify it under the same terms as Perl itself.
+
+BLURB
+
+  afs-monitor provides Nagios-compatible probe scripts that can be used to
+  monitor AFS servers.  It contains four scripts: check_afsspace, which
+  monitors file server partitions for disk usage; check_bos, which
+  monitors any bosserver-managed set of processes for problems reported by
+  bos; check_rxdebug, which monitors AFS fileservers for connections
+  waiting for a thread; and check_udebug, which monitors Ubik services
+  (such as vlserver and ptserver) for replication and quorum problems.
+
+DESCRIPTION
+
+  This is a collection of Nagios plugin scripts for monitoring various
+  aspects of AFS servers.  They all follow the Nagios standards for
+  check_* scripts (although don't support a few features) and use exit
+  statuses that give Nagios the right information.  They don't use any
+  Nagios-specific libraries, however, and should be suitable for use with
+  other monitoring systems such as mon.  Any monitoring system that
+  understands remote checks for services should be able to use these
+  scripts with some adaptation.
+
+  check_afsspace uses vos partinfo to check the available space on each
+  partition on a file server.  It reports a critical error if the
+  percentage used is above a configurable threshold (90% by default) and a
+  warning if it is above a lower configurable threshold (85% by default).
+
+  check_bos runs bos status on a file server or volume location server and
+  scans the output, making sure that all commands are running normally and
+  the file server isn't salvaging.  If it sees any output it doesn't
+  expect from bos status, it reports that output in an alert.
+
+  check_rxdebug runs rxdebug against a file server and looks for any
+  client connections that are in the state "waiting for a thread."  This
+  indicates client connections that are blocked waiting for a file server
+  thread.  We've found this to be a reliable test for detecting serious
+  file server performance problems.  It reports a critical error if the
+  count of such connections is above a configurable level (8 by default)
+  and a warning if it is above a lower configurable threshold (2 by
+  default).
+
+  check_udebug runs udebug against a ubik service (vlserver, ptserver,
+  kaserver, or buserver) and makes sure that it is in a reasonable state.
+  It checked to be sure that there is a sync site for the service, and
+  when there is, that the sync site believes that the recovery state is 1f
+  (indicating that all of the slaves have the same version of the
+  database).
+
+  These scripts were written by Xueshan Feng, Neil Crellin, Quanah
+  Gibson-Mount, and Russ Allbery and are currently maintained by Russ
+  Allbery.
+
+REQUIREMENTS
+
+  All the plugin scripts are written in Perl and should work with Perl
+  5.006 or later.  They require the AFS client binaries (specifically vos,
+  bos, rxdebug, and udebug) and expect them to be in either /usr/bin or in
+  /usr/local/bin.
+
+INSTALLATION
+
+  All that's required for installation is to copy the check_* scripts into
+  whatever directory you want to use for Nagios probes and modify the
+  first lines of the scripts as necessary if your Perl binary isn't in
+  /usr/bin/perl.  If your AFS client binaries aren't in the expected
+  places, you may also need to modify the top of each script to provide a
+  different set of paths to search.
+
+  You can then use the scripts directly with commands such as:
+
+      check_afsspace -H afs1
+
+  To use the scripts in a Nagios probe, configure a command such as:
+
+      define command {
+          command_name check_afsspace
+          command_line /path/to/install/check_afsspace -H $HOSTADDRESS$
+      }
+
+  changing the path to the script to wherever you installed the scripts.
+  You can of course pass additional options here, including making use of
+  arguments to the command in the service check definition using $ARG1$
+  and so forth.
+
+HOMEPAGE AND SOURCE REPOSITORY
+
+  The afs-monitor web page at:
+
+      http://www.eyrie.org/~eagle/software/afs-monitor/
+
+  will always have the current version of this package, the current
+  documentation, and pointers to any additional resources.
+
+  afs-monitor is maintained using Git.  You can access the current source
+  by cloning the repository at:
+
+      git://git.eyrie.org/afs/afs-monitor.git
+
+  or view the repository via the web at:
+
+      http://git.eyrie.org/?p=afs/afs-monitor.git
