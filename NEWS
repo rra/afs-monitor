@@ -14,3 +14,6 @@ afs-monitor 2.0 (unreleased)
     scripts, rather than reporting the problem only to standard error.
     Check that the host to check was specified and report a syntax error
     if it wasn't.  Thanks, Tobias Wolter.
+
+    Ignore "bos: running unauthenticated" in check_bos, since bos status
+    is always run unauthenticated.

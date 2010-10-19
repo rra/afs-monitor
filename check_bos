@@ -44,6 +44,7 @@ our $TIMEOUT = 10;
 # error.
 our @OKAY = (
     qr/^\s*$/,
+    qr/^bos: running unauthenticated$/,
     qr/^Instance\ \S+,\ \(type\ is\ \S+\)(\ has\ core\ file,)?
          \ currently\ running\ normally\.$/x,
     qr/^\s*Auxiliary status is: file server running\.$/,
