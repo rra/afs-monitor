@@ -102,6 +102,7 @@ if ($? != 0) {
 
 # Scan the output.  If we see anything that we don't expect, immediately
 # report it as a fatal error.
+my $prev_line = '';
 for my $line (@bos) {
     my $okay = 0;
     for my $regex (@OKAY) {
@@ -113,8 +114,13 @@ for my $line (@bos) {
     unless ($okay) {
         $line =~ s/^\s+//;
         $line =~ s/\s+$//;
-        print "BOS CRITICAL - $line\n";
-        exit 2;
+        if ($prev_line =~ /^Instance salvage,/ && $line =~ /running now/) {
+            print "BOS WARNING - salvage is running\n";
+            exit 1;
+        } else {
+            print "BOS CRITICAL - $line\n";
+            exit 2;
+        }
     }
 }
 print "BOS OK\n";
@@ -142,14 +148,16 @@ may require some customization.
 
 B<check_bos> will always print out a single line of output.  If there is a
 line that isn't matched by any regexes identifying acceptable lines, it
-will output the first non-matching line prefixed by C<BOS CRITICAL>.
-Otherwise, it will output B<BOS OK>.  Note that this monitoring may not
-catch such things as a service being constantly restarted if it happens to
-be up and running normally each time the probe runs; it doesn't pay any
-attention to the last start time, the last error exit status, the presence
-of core files, and the like.  It mostly just looks for the "running
-normally" part of the B<bos> output and makes sure the auxilliary status
-is also "running normally" for a file server process.
+will output the first non-matching line prefixed by C<BOS CRITICAL>.  If
+the salvager is running (such as when started by C<bos salvage>, it will
+print that out prefixed by C<BOS WARNING>.  Otherwise, it will output
+B<BOS OK>.  Note that this monitoring may not catch such things as a
+service being constantly restarted if it happens to be up and running
+normally each time the probe runs; it doesn't pay any attention to the
+last start time, the last error exit status, the presence of core files,
+and the like.  It mostly just looks for the "running normally" part of the
+B<bos> output and makes sure the auxilliary status is also "running
+normally" for a file server process.
 
 =head1 OPTIONS
 
@@ -179,9 +187,10 @@ Print out the version of B<check_bos> and quit.
 =head1 EXIT STATUS
 
 B<check_bos> follows the standard Nagios exit status requirements.  This
-means that it will exit with status 0 if there are no problems or with
-status 2 if there is a problem detected.  For other errors, such as
-invalid syntax, B<check_bos> will exit with status 3.
+means that it will exit with status 0 if there are no problems, with
+status 1 if the salvager is running, or with status 2 if there is a
+problem detected.  For other errors, such as invalid syntax, B<check_bos>
+will exit with status 3.
 
 =head1 BUGS
 
