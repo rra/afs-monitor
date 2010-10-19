@@ -9,3 +9,8 @@ afs-monitor 2.0 (unreleased)
     salvage), check_bos now reports a warning stating that, rather than a
     critical error showing the auxiliary status line.  Reported by Steve
     Rader.
+
+    Print an UNKNOWN status on standard output on syntax errors in all
+    scripts, rather than reporting the problem only to standard error.
+    Check that the host to check was specified and report a syntax error
+    if it wasn't.  Thanks, Tobias Wolter.

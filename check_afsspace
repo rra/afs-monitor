@@ -46,6 +46,15 @@ $VOS ||= '/usr/bin/vos';
 # Implementation
 ##############################################################################
 
+# Report a syntax error and exit.  We do this via stdout in order to satisfy
+# the Nagios plugin output requirements, but also report a more conventional
+# error via stderr in case people are calling this outside of Nagios.
+sub syntax {
+    print "AFS UNKNOWN - ", join ('', @_), "\n";
+    warn "$0: ", join ('', @_), "\n";
+    exit 3;
+}
+
 # Parse command line options.
 my ($help, $host, $version);
 Getopt::Long::config ('bundling', 'no_ignore_case');
@@ -54,7 +63,8 @@ GetOptions ('c|critical=i' => \$CRITICAL,
             'h|help'       => \$help,
             't|timeout=i'  => \$TIMEOUT,
             'V|version'    => \$version,
-            'w|warning=i'  => \$WARNINGS) or exit 3;
+            'w|warning=i'  => \$WARNINGS)
+    or syntax ("invalid option");
 if ($help) {
     print "Feeding myself to perldoc, please wait....\n";
     exec ('perldoc', '-t', $0) or die "Cannot fork: $!\n";
@@ -63,13 +73,10 @@ if ($help) {
     print "check_afsspace $version\n";
     exit 0;
 }
-if (@ARGV) {
-    warn "Usage: $0 [-hv] [-c <level>] [-w <level>] -H <host>\n";
-    exit 3;
-}
+syntax ("extra arguments on command line") if @ARGV;
+syntax ("host to check not specified") unless (defined $host);
 if ($WARNINGS > $CRITICAL) {
-    warn "$0: warning level $WARNINGS greater than critical level $CRITICAL\n";
-    exit 3;
+    syntax ("warning level $WARNINGS greater than critical level $CRITICAL");
 }
 
 # Set up the alarm.

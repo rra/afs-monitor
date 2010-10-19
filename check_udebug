@@ -40,6 +40,15 @@ $UDEBUG ||= '/usr/bin/udebug';
 # Implementation
 ##############################################################################
 
+# Report a syntax error and exit.  We do this via stdout in order to satisfy
+# the Nagios plugin output requirements, but also report a more conventional
+# error via stderr in case people are calling this outside of Nagios.
+sub syntax {
+    print "UBIK UNKNOWN - ", join ('', @_), "\n";
+    warn "$0: ", join ('', @_), "\n";
+    exit 3;
+}
+
 # Parse command line options.
 my ($help, $host, $port, $version);
 Getopt::Long::config ('bundling', 'no_ignore_case');
@@ -47,7 +56,8 @@ GetOptions ('H|hostname=s' => \$host,
             'h|help'       => \$help,
             'p|port=i'     => \$port,
             't|timeout=i'  => \$TIMEOUT,
-            'V|version'    => \$version) or exit 3;
+            'V|version'    => \$version)
+    or syntax ("invalid option");
 if ($help) {
     print "Feeding myself to perldoc, please wait....\n";
     exec ('perldoc', '-t', $0) or die "Cannot fork: $!\n";
@@ -56,10 +66,9 @@ if ($help) {
     print "check_udebug $version\n";
     exit 0;
 }
-if (@ARGV || !(defined ($host) && defined ($port))) {
-    warn "Usage: $0 [-hv] [-t <timeout>] -H <host> -p <port>\n";
-    exit 3;
-}
+syntax ("extra arguments on command line") if @ARGV;
+syntax ("host to check not specified") unless (defined $host);
+syntax ("port to check not specified") unless (defined $port);
 
 # Set up the alarm.
 $SIG{ALRM} = sub {
