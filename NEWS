@@ -17,3 +17,10 @@ afs-monitor 2.0 (unreleased)
 
     Ignore "bos: running unauthenticated" in check_bos, since bos status
     is always run unauthenticated.
+
+    Add support for reporting warnings in check_bos and report a warning
+    if there is inappropriate access on server directories.  Patch from
+    Steve Rader.
+
+    If check_bos is successful, report the number of instances running
+    normally.  Patch from Steve Rader.

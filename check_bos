@@ -40,8 +40,8 @@ our $TIMEOUT = 10;
 
 # The list of regular expressions matching expected output.  You may need to
 # customize this for what you're running at your site.  Any output from bos
-# that doesn't match one of these regular expressions will throw a critical
-# error.
+# that doesn't match one of these regular expressions or the warning regular
+# expressions below will throw a critical error.
 our @OKAY = (
     qr/^\s*$/,
     qr/^bos: running unauthenticated$/,
@@ -52,6 +52,12 @@ our @OKAY = (
     qr/^\s*Last exit at /,
     qr/^\s*Last error exit at /,
     qr/^\s*Command \d+ is /
+);
+
+# The list of regular expressions that match output that should produce a
+# warning.  You may need to customize this for what you expect at your site.
+our @WARNINGS = (
+    qr/^\s*Bosserver reports inappropriate access on server directories/
 );
 
 ##############################################################################
@@ -110,16 +116,24 @@ if ($? != 0) {
 
 # Scan the output.  If we see anything that we don't expect, immediately
 # report it as a fatal error.
+my $count = 0;
 my $prev_line = '';
 for my $line (@bos) {
     my $okay = 0;
+    my $warn = 0;
     for my $regex (@OKAY) {
         if ($line =~ /$regex/) {
             $okay = 1;
             last;
         }
     }
-    unless ($okay) {
+    for my $regex (@WARNINGS) {
+        if ($line =~ /$regex/) {
+            $warn = 1;
+            last;
+        }
+    }
+    unless ($okay || $warn) {
         $line =~ s/^\s+//;
         $line =~ s/\s+$//;
         if ($prev_line =~ /^Instance salvage,/ && $line =~ /running now/) {
@@ -130,8 +144,20 @@ for my $line (@bos) {
             exit 2;
         }
     }
+    if ($warn) {
+        $line =~ s/^\s+//;
+        $line =~ s/\s+$//;
+        print "BOS WARNING - $line\n";
+        exit 1;
+    }
+    $count++ if ($line =~ /currently running normally\.$/);
+    $prev_line = $line;
 }
-print "BOS OK\n";
+if ($count == 1) {
+    print "BOS OK - one process running normally\n";
+} else {
+    print "BOS OK - $count processes running normally\n";
+}
 exit 0;
 
 ##############################################################################
@@ -157,15 +183,16 @@ may require some customization.
 B<check_bos> will always print out a single line of output.  If there is a
 line that isn't matched by any regexes identifying acceptable lines, it
 will output the first non-matching line prefixed by C<BOS CRITICAL>.  If
-the salvager is running (such as when started by C<bos salvage>, it will
-print that out prefixed by C<BOS WARNING>.  Otherwise, it will output
-B<BOS OK>.  Note that this monitoring may not catch such things as a
-service being constantly restarted if it happens to be up and running
-normally each time the probe runs; it doesn't pay any attention to the
-last start time, the last error exit status, the presence of core files,
-and the like.  It mostly just looks for the "running normally" part of the
-B<bos> output and makes sure the auxilliary status is also "running
-normally" for a file server process.
+the salvager is running (such as when started by C<bos salvage>) or other
+warnings are found, it will print that warning information prefixed by
+C<BOS WARNING>.  Otherwise, it will output C<BOS OK>.  Note that this
+monitoring may not catch such things as a service being constantly
+restarted if it happens to be up and running normally each time the probe
+runs; it doesn't pay any attention to the last start time, the last error
+exit status, the presence of core files, and the like.  It mostly just
+looks for the "running normally" part of the B<bos> output and makes sure
+the auxilliary status is also "running normally" for a file server
+process.
 
 =head1 OPTIONS
 
