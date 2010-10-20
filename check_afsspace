@@ -25,6 +25,16 @@ use strict;
 
 use Getopt::Long qw(GetOptions);
 
+# Use Number::Format if it's available, but don't require it.
+our $FORMAT = 0;
+eval {
+    require Number::Format;
+    Number::Format->import ('format_bytes');
+};
+unless ($@) {
+    $FORMAT = 1;
+}
+
 ##############################################################################
 # Site configuration
 ##############################################################################
@@ -56,14 +66,15 @@ sub syntax {
 }
 
 # Parse command line options.
-my ($help, $host, $version);
+my ($help, $host, $partition, $version);
 Getopt::Long::config ('bundling', 'no_ignore_case');
-GetOptions ('c|critical=i' => \$CRITICAL,
-            'H|hostname=s' => \$host,
-            'h|help'       => \$help,
-            't|timeout=i'  => \$TIMEOUT,
-            'V|version'    => \$version,
-            'w|warning=i'  => \$WARNINGS)
+GetOptions ('c|critical=i'  => \$CRITICAL,
+            'H|hostname=s'  => \$host,
+            'h|help'        => \$help,
+            'p|partition=s' => \$partition,
+            't|timeout=i'   => \$TIMEOUT,
+            'V|version'     => \$version,
+            'w|warning=i'   => \$WARNINGS)
     or syntax ("invalid option");
 if ($help) {
     print "Feeding myself to perldoc, please wait....\n";
@@ -78,6 +89,10 @@ syntax ("host to check not specified") unless (defined $host);
 if ($WARNINGS > $CRITICAL) {
     syntax ("warning level $WARNINGS greater than critical level $CRITICAL");
 }
+if ($partition) {
+    $partition = "/vicep$partition" if length ($partition) <= 2;
+    $partition = "/$partition" if $partition !~ m%^/%;
+}
 
 # Set up the alarm.
 $SIG{ALRM} = sub {
@@ -90,20 +105,45 @@ alarm ($TIMEOUT);
 # partition.  Accumulate critical messages in @critical and warnings in
 # @warnings.  Accumulate all percentages in @all.
 my (@critical, @warnings, @all);
-my @data = `$VOS partinfo '$host' 2> /dev/null`;
+my $command = "$VOS partinfo -server '$host'";
+$command .= " -partition $partition" if defined ($partition);
+my @data = `$command 2> /dev/null`;
 if ($? != 0) {
     print "AFS CRITICAL - cannot contact server\n";
     exit 2;
 }
+$partition .= ':';
 for (@data) {
-    my ($partition, $free, $total) = (split)[4,5,11];
+    my ($part, $free, $total) = (split)[4,5,11];
+    next if (defined ($partition) and $part ne $partition);
     my $percent = int ((($total - $free) / $total) * 100);
-    if ($percent >= $CRITICAL) {
-        push (@critical, "$partition$percent% (free $free)");
-    } elsif ($percent >= $WARNINGS) {
-        push (@warnings, "$partition$percent% (free $free)");
+    my $used = $total - $free;
+    if ($FORMAT) {
+        $total = format_bytes ($total, mode => 'iec');
+        $free  = format_bytes ($free,  mode => 'iec');
+        $used  = format_bytes ($used,  mode => 'iec');
     }
-    push (@all, "$partition$percent%");
+    my $summary;
+    if ($partition) {
+        $summary = "$part$percent% used"
+            . " ($total total, $used used, $free free)";
+    } else {
+        $summary = "$part$percent% (free $free)";
+    }
+    if ($percent >= $CRITICAL) {
+        push (@critical, $summary);
+    } elsif ($percent >= $WARNINGS) {
+        push (@warnings, $summary);
+    }
+    if ($partition) {
+        push (@all, $summary);
+    } else {
+        push (@all, "$part$percent%");
+    }
+}
+unless (@all) {
+    print "AFS CRITICAL - no partition found\n";
+    exit 2;
 }
 
 # Exit with the appropriate error messages.
@@ -129,7 +169,7 @@ check_afsspace - Monitor AFS disk space usage under Nagios
 =head1 SYNOPSIS
 
 B<check_afsspace> [B<-hV>] [B<-c> I<threshold>] [B<-w> I<threshold>]
-    [B<-t> I<timeout>] B<-H> I<host>
+    [B<-p> I<partition>] [B<-t> I<timeout>] B<-H> I<host>
 
 =head1 DESCRIPTION
 
@@ -149,6 +189,10 @@ the critical errors if any, otherwise giving the warnings if any,
 otherwise listing in an abbreviated form the percentage free space for all
 partitions.
 
+The check can be limited to a single partition by specifying that
+partition with the B<-p> option.  In this case, more verbose information
+about the total, used, and free space is given in the one line of output.
+
 =head1 OPTIONS
 
 =over 4
@@ -167,6 +211,14 @@ option is required.
 
 Print out this documentation (which is done simply by feeding the script
 to C<perldoc -t>).
+
+=item B<-p> I<partition>, B<--partition>=I<partition>
+
+Limit the results to the specified partition.  The partition can be given
+as the partition letter (C<a>, for example) or the full partition name
+(C</vicepa>), with or without the leading slash.  If this option is given,
+only that partition will be checked and more verbose information about
+total, used, and free space will be printed.
 
 =item B<-t> I<timeout>, B<--timeout>=I<timeout>
 
@@ -223,7 +275,8 @@ tools page at L<http://www.eyrie.org/~eagle/software/afs-monitor/>.
 Originally written by Susan Feng for use with mon.  Updated by Quanah
 Gibson-Mount to work with Nagios, and then further updated by Russ Allbery
 <rra@stanford.edu> to support more standard options and to use a more
-uniform coding style.
+uniform coding style.  Support for checking a single partition based on
+work by Steve Rader.
 
 =head1 COPYRIGHT AND LICENSE
 

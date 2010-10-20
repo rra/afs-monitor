@@ -5,6 +5,11 @@ afs-monitor 2.0 (unreleased)
     Initial tarball release, based on check_afsspace 1.16, check_bos 1.7,
     check_rxdebug 1.11, and check_udebug 1.3.
 
+    Support checking a single partition in check_afsspace and print more
+    verbose information about total, used, and free space in that mode.
+    Format partition sizes using Number::Format if available.  Based on
+    work by Steve Rader.
+
     If the salvager is running (such as when started manually with bos
     salvage), check_bos now reports a warning stating that, rather than a
     critical error showing the auxiliary status line.  Reported by Steve

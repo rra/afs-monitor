@@ -65,6 +65,9 @@ REQUIREMENTS
   bos, rxdebug, and udebug) and expect them to be in either /usr/bin or in
   /usr/local/bin.
 
+  check_afsspace will use Number::Format, if available, to format sizes
+  with IEC 60027 prefixes.
+
 INSTALLATION
 
   All that's required for installation is to copy the check_* scripts into
