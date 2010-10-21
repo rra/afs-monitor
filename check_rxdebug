@@ -41,7 +41,9 @@ our $TIMEOUT = 60;
 
 # The full path to rxdebug.  Make sure that this is on local disk so that
 # monitoring doesn't have an AFS dependency.
-our ($RXDEBUG) = grep { -x $_ } qw(/usr/bin/rxdebug /usr/local/bin/rxdebug);
+our ($RXDEBUG) = grep { -x $_ }
+    qw(/usr/bin/rxdebug /usr/sbin/rxdebug /usr/local/bin/rxdebug
+       /usr/local/sbin/rxdebug);
 $RXDEBUG ||= '/usr/bin/rxdebug';
 
 ##############################################################################

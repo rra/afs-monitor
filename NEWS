@@ -29,3 +29,6 @@ afs-monitor 2.0 (unreleased)
 
     If check_bos is successful, report the number of instances running
     normally.  Patch from Steve Rader.
+
+    Look for rxdebug in /usr/sbin and /usr/local/sbin since OpenAFS
+    installs it into sbindir by default.
