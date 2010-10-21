@@ -85,11 +85,14 @@ unless (open (UDEBUG, "$UDEBUG $host $port |")) {
     warn "$0: cannot run udebug\n";
     exit 3;
 }
-my ($issync, $recovery, $synchost);
+my ($issync, $recovery, $synchost, $db);
 while (<UDEBUG>) {
     $issync = 1 if /^I am sync site /;
     $recovery = 1 if /^Recovery state 1f/;
     $synchost = 1 if /^Sync host \d+(\.\d+){3} was set /;
+    if (/Local db version is (\d+\.\d+)/) {
+        $db = "db version $1";
+    }
 }
 close UDEBUG;
 if ($? != 0) {
@@ -105,7 +108,7 @@ if ($issync && !$recovery) {
     print "UBIK CRITICAL - no sync site\n";
     exit 2;
 } else {
-    print "UBIK OK\n";
+    print "UBIK OK - $db\n";
     exit 0;
 }
 

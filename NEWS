@@ -32,3 +32,6 @@ afs-monitor 2.0 (unreleased)
 
     Look for rxdebug in /usr/sbin and /usr/local/sbin since OpenAFS
     installs it into sbindir by default.
+
+    Report the database version as extra information in check_udebug if
+    there are no errors or warnings.
