@@ -1,0 +1,359 @@
+#!/usr/bin/perl -w
+our $VERSION = '@VERSION@ @DATE@';
+#
+# check afs_quotas -- Monitor AFS quota usage under Nagios.
+#
+# Expects a host with the -H option or a volume with the -n option and checks
+# usage versus quota either for all volumes on that server or only for the
+# specific volume listed.  Exits with status 1 if the free space is below a
+# warning percentage and with status 2 if the free space is below a critical
+# percentage.
+#
+# Written by Russ Allbery <rra@stanford.edu>
+# Based on a script by Steve Rader
+# Copyright 2010 Board of Trustees, Leland Stanford Jr. University
+#
+# This program is free software; you may redistribute it and/or modify it
+# under the same terms as Perl itself.
+
+##############################################################################
+# Modules and declarations
+##############################################################################
+
+require 5.006;
+
+use strict;
+
+use Getopt::Long qw(GetOptions);
+
+# Use Number::Format if it's available, but don't require it.
+our $FORMAT = 0;
+eval {
+    require Number::Format;
+    Number::Format->import ('format_bytes');
+};
+unless ($@) {
+    $FORMAT = 1;
+}
+
+##############################################################################
+# Site configuration
+##############################################################################
+
+# The default percentage full at which to warn and at which to send a critical
+# alert.  These can be overridden with the -w and -c command-line options.
+our $WARNINGS = 85;
+our $CRITICAL = 90;
+
+# The default timeout in seconds (implemented by alarm) for vos operations.
+our $TIMEOUT = 300;
+
+# The full path to vos.  Make sure that this is on local disk so that
+# monitoring doesn't have an AFS dependency.
+our ($VOS) = grep { -x $_ } qw(/usr/bin/vos /usr/local/bin/vos);
+$VOS ||= '/usr/bin/vos';
+
+##############################################################################
+# AFS operations
+##############################################################################
+
+# Given a volume name, determines various characteristics of the volume and
+# returns them in a hash.  'size' gets the volume size in KB, 'quota' gets the
+# volume quota in KB, and 'rwserver' and 'rwpart' get the server and partition
+# for the read-write volume.
+sub volinfo {
+    my ($volume) = @_;
+    my (%results);
+    unless (open (VEX, '-|', $VOS, 'examine', $volume, '-noauth')) {
+        print "AFS CRITICAL - cannot contact server\n";
+        exit 2;
+    }
+    local $_;
+    while (<VEX>) {
+        if (/^\Q$volume\E\s+\d+ (RW|RO|BK)\s+(\d+) K\s+On-line\s*$/) {
+            $results{size} = $2;
+        } elsif (/^\s+server ([^.\s]+)\.\S+ partition (\S+) RW Site\s*/) {
+            $results{rwserver} = $1;
+            $results{rwpart} = $2;
+        } elsif (/^\s+MaxQuota\s+(\d+) K\s*$/) {
+            $results{quota} = $1;
+        }
+    }
+    close VEX;
+    return unless $results{size};
+    return %results;
+}
+
+# Given a server, for each partition on that server, for each volume on each
+# partition, colllect volume usage and quota information.  Return the results
+# in a hash where the keys are volume names and the values are hashes
+# containing 'size' and 'quota' keys and values in KB.
+sub serverinfo {
+    my ($server, $partition) = @_;
+    my @command = ($VOS, 'listvol', '-server', $server, '-long', '-noauth');
+    if (defined ($partition)) {
+        push (@command, '-partition', $partition);
+    }
+    unless (open (LVOL, '-|', @command)) {
+        print "AFS CRITICAL - cannot contact server\n";
+        exit 2;
+    }
+    my ($volume, %results);
+    local $_;
+    while (<LVOL>) {
+        if (/^(\S+)\s+\d+ RW\s+(\d+) K\s+On-line\s*$/) {
+            $volume = $1;
+            $results{$volume}{size} = $2;
+        } elsif (/^\s+MaxQuota\s+(\d+) K\s*$/) {
+            $results{$volume}{quota} = $1;
+        }
+    }
+    return %results;
+}
+
+##############################################################################
+# Reporting
+##############################################################################
+
+# Summarize a single volume.  This is used to support the -n option, where we
+# give verbose results for one volume.  Takes a hash ref to the volume data
+# and returns a list consisting of the percent used and the text summary.
+sub summarize_volume {
+    my ($volume, $results) = @_;
+    my $total = $$results{quota};
+    my $used  = $$results{size};
+    my $free  = $total - $used;
+    $free = 0 if ($free < 0);
+    my $percent = int ((($total - $free) / $total) * 100);
+    if ($FORMAT) {
+        $total = format_bytes ($total, mode => 'iec');
+        $free  = format_bytes ($free,  mode => 'iec');
+        $used  = format_bytes ($used,  mode => 'iec');
+    }
+    my $summary = "$volume $percent% used ($total quota, $used used,"
+        . " $free free)";
+    return ($percent, $summary);
+}
+
+##############################################################################
+# Main routine
+##############################################################################
+
+# Report a syntax error and exit.  We do this via stdout in order to satisfy
+# the Nagios plugin output requirements, but also report a more conventional
+# error via stderr in case people are calling this outside of Nagios.
+sub syntax {
+    print "AFS UNKNOWN - ", join ('', @_), "\n";
+    warn "$0: ", join ('', @_), "\n";
+    exit 3;
+}
+
+# Parse command line options.
+my ($help, $host, $partition, $version, $volume);
+Getopt::Long::config ('bundling', 'no_ignore_case');
+GetOptions ('c|critical=i'  => \$CRITICAL,
+            'H|hostname=s'  => \$host,
+            'h|help'        => \$help,
+            'n|volume=s'    => \$volume,
+            'p|partition=s' => \$partition,
+            't|timeout=i'   => \$TIMEOUT,
+            'V|version'     => \$version,
+            'w|warning=i'   => \$WARNINGS)
+    or syntax ("invalid option");
+if ($help) {
+    print "Feeding myself to perldoc, please wait....\n";
+    exec ('perldoc', '-t', $0) or die "Cannot fork: $!\n";
+} elsif ($version) {
+    my $version = $VERSION;
+    print "check_afsspace $version\n";
+    exit 0;
+}
+syntax ("extra arguments on command line") if @ARGV;
+syntax ("host or volume to check not specified")
+    unless (defined ($host) || defined ($volume));
+if ($WARNINGS > $CRITICAL) {
+    syntax ("warning level $WARNINGS greater than critical level $CRITICAL");
+}
+
+# Set up the alarm.
+$SIG{ALRM} = sub {
+    print "AFS CRITICAL - network timeout after $TIMEOUT seconds\n";
+    exit 2;
+};
+alarm ($TIMEOUT);
+
+# Do the actual check.
+if (defined ($volume)) {
+    my %results = volinfo ($volume);
+    unless (%results) {
+        print "AFS CRITICAL - cannot get information for volume $volume\n";
+        exit 2;
+    }
+    my ($percent, $summary) = summarize_volume ($volume, \%results);
+    if ($percent > $CRITICAL) {
+        print "AFS CRITICAL - $summary\n";
+        exit 2;
+    } elsif ($percent > $WARNINGS) {
+        print "AFS WARNING - $summary\n";
+        exit 1;
+    } else {
+        print "AFS OK - $summary\n";
+        exit 0;
+    }
+} else {
+    my %results = serverinfo ($host, $partition);
+    my (@ok, @warning, @critical);
+    for my $volume (keys %results) {
+        my ($percent, $summary)
+            = summarize_volume ($volume, $results{$volume});
+        $summary =~ s/\s*used\s*\(.*//;
+        if ($percent > $CRITICAL) {
+            push (@critical, $summary);
+        } elsif ($percent > $WARNINGS) {
+            push (@warning, $summary);
+        } else {
+            push (@ok, $summary);
+        }
+    }
+    if (@critical > 0) {
+        print "AFS CRITICAL - ", join (', ', @critical), "\n";
+        exit 2;
+    } elsif (@warning > 0) {
+        print "AFS WARNING - ", join (', ', @warning), "\n";
+        exit 1;
+    } else {
+        print "AFS OK - ", scalar (@ok), " volumes okay\n";
+        exit 0;
+    }
+}
+
+##############################################################################
+# Documentation
+##############################################################################
+
+=head1 NAME
+
+check_afs_quotas - Monitor AFS quota usage under Nagios
+
+=head1 SYNOPSIS
+
+B<check_afs_quotas> [B<-hV>] [B<-c> I<threshold>] [B<-w> I<threshold>]
+    [B<-t> I<timeout>] (B<-H> I<host> [B<-p> I<partition>] | B<-n> I<volume>)
+
+=head1 DESCRIPTION
+
+B<check_afs_quotas> is a Nagios plugin for checking free space in AFS
+volumes based on the allocated quota for the volume.  It uses either C<vos
+examine> or C<vos listvol> to obtain the quota and current usage for
+either a single volume or all volumes on a server or server parittion and
+will return an alert if the percentage of quota used is over a threshold.
+By default, it returns a critical error if the used quota is over 90% and
+a warning if it is over 85% (changeable with the B<-c> and B<-w> options).
+
+To check a single volume, specify the volume name with B<-n>.  To check a
+whole server, specify the server name with B<-H>.  You can check only a
+single partition on a server by using the B<-p> option to name the
+partition in combination with B<-H>.
+
+If C<vos examine> or C<vos listvol> doesn't return within the timeout,
+B<check_afs_quotas> will return a critical error.  The default timeout is
+300 seconds, changeable with the B<-t> option.
+
+B<check_afs_quotas> will always print out a single line of output, giving
+the critical errors if any, otherwise giving the warnings if any,
+otherwise either summarizing the volume usage (if B<-n> was given) or the
+total number of volumes checked.
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-c> I<threshold>, B<--critical>=I<threshold>
+
+Change the critical percentage threshold to I<threshold>, which should be
+an integer percentage.  The default is 90.
+
+=item B<-H> I<host>, B<--hostname>=I<host>
+
+The AFS file server whose volumes to check for quota usage.  Either this
+option or the B<-n> option is required.
+
+=item B<-h>, B<--help>
+
+Print out this documentation (which is done simply by feeding the script
+to C<perldoc -t>).
+
+=item B<-n> I<volume>, B<--volume>=I<volume>
+
+Check quota usage for a specific volume.  Either this option or the B<-H>
+option is required.
+
+=item B<-p> I<partition>, B<--partition>=I<partition>
+
+Used in combination with the B<-H> option, limits quota checking to a
+particular partition.  The partition can be given in any of the forms
+recognized by the AFS tools (so both the partition letter C<a> and the
+full partition name C</vicepa> will work).
+
+=item B<-t> I<timeout>, B<--timeout>=I<timeout>
+
+Change the timeout for the C<vos partinfo> command.  The default timeout
+is 300 seconds.
+
+=item B<-V>, B<--version>
+
+Print out the version of B<check_afs_quotas> and quit.
+
+=item B<-w> I<threshold>, B<--warning>=I<threshold>
+
+Change the warning percentage threshold to I<threshold>, which should be
+an integer percentage.  The default is 85.
+
+=back
+
+=head1 EXIT STATUS
+
+B<check_afs_quotas> follows the standard Nagios exit status requirements.
+This means that it will exit with status 0 if there are no problems, with
+status 2 if there is at least one critical partition for that server, and
+with status 1 if there are no critical partitions but at least one warning
+partition.  For other errors, such as invalid syntax, B<check_afs_quotas>
+will exit with status 3.
+
+=head1 BUGS
+
+The standard B<-v> verbose Nagios plugin option is not supported and
+should be.  (For example, under B<-vv> we would want to show the actual
+total, free, and used byte counts, not just the percentages.)
+
+The usage message for invalid options and for the B<-h> option doesn't
+conform to Nagios standards.
+
+=head1 CAVEATS
+
+This script does not use the Nagios util library or any of the defaults
+that it provides, which makes it somewhat deficient as a Nagios plugin.
+This is intentional, though, since this script can be used with other
+monitoring systems as well.  It's not clear what a good solution to this
+would be.
+
+=head1 SEE ALSO
+
+vos(1)
+
+This script is part of the afs-monitor package, which includes various AFS
+monitoring plugins for Nagios.  It is available from the AFS monitoring
+tools page at L<http://www.eyrie.org/~eagle/software/afs-monitor/>.
+
+=head1 AUTHORS
+
+Written by Russ Allbery based on a similar script by Steve Rader.
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2010 Board of Trustees, Leland Stanford Jr. University.
+
+This program is free software; you may redistribute it and/or modify it
+under the same terms as Perl itself.
+
+=cut
