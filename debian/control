@@ -2,7 +2,7 @@ Source: nagios-plugins-afs
 Section: net
 Priority: extra
 Build-Depends: debhelper (>= 8)
-Maintainer: Russ Allbery <rra@stanford.edu>
+Maintainer: Russ Allbery <rra@debian.org>
 Bugs: mailto:rra@debian.org
 Homepage: http://www.eyrie.org/~eagle/software/afs-monitor/
 Standards-Version: 3.9.1
