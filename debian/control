@@ -1,0 +1,20 @@
+Source: nagios-plugins-afs
+Section: net
+Priority: extra
+Build-Depends: debhelper (>= 8)
+Maintainer: Russ Allbery <rra@stanford.edu>
+Bugs: mailto:rra@debian.org
+Homepage: http://www.eyrie.org/~eagle/software/afs-monitor/
+Standards-Version: 3.9.1
+Vcs-Git: git://git.eyrie.org/afs/afs-monitor.git
+Vcs-Browser: http://git.eyrie.org/?p=afs/afs-monitor.git
+
+Package: nagios-plugins-afs
+Architecture: all
+Depends: openafs-client, perl
+Suggests: nagios3
+Conflicts: stanford-server-nagios (<= 21)
+Description: Plugins for Nagios to monitor AFS servers
+ Nagios is a host/service/network monitoring and management system.  This
+ package provides plugins for Nagios to monitor AFS file servers and
+ volume location servers for availability and disk and quota usage.

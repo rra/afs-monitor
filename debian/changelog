@@ -1,0 +1,6 @@
+nagios-plugins-afs (2.0-1) unstable; urgency=low
+
+  * Initial packaging.
+
+ -- Russ Allbery <rra@debian.org>  Wed, 10 Nov 2010 17:32:50 -0800
+
