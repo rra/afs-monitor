@@ -11,7 +11,7 @@ Vcs-Browser: http://git.eyrie.org/?p=afs/afs-monitor.git
 
 Package: nagios-plugins-afs
 Architecture: all
-Depends: openafs-client, perl
+Depends: ${misc:Depends}, openafs-client, perl
 Suggests: nagios3
 Conflicts: stanford-server-nagios (<= 21)
 Description: Plugins for Nagios to monitor AFS servers
