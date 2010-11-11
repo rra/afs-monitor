@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-our $VERSION = '@VERSION@ @DATE@';
+our $VERSION = '2.0 (2010-11-10)';
 #
 # check afs_quotas -- Monitor AFS quota usage under Nagios.
 #
