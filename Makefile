@@ -5,7 +5,8 @@
 VERSION := $(shell grep '^afs-monitor' NEWS | head -1 | cut -d' ' -f 2)
 DATE    := $(shell grep '^afs-monitor' NEWS | head -1 | cut -d' ' -f 3)
 
-SCRIPTS := check_afs_quotas check_afsspace check_bos check_rxdebug check_udebug
+SCRIPTS := check_afs_quotas check_afs_space check_afs_bos check_afs_rxdebug \
+	   check_afs_udebug
 EXTRA   := LICENSE NEWS README
 
 all:
