@@ -13,7 +13,6 @@ Package: nagios-plugins-afs
 Architecture: all
 Depends: ${misc:Depends}, openafs-client, perl
 Suggests: nagios3
-Conflicts: stanford-server-nagios (<= 21)
 Description: Plugins for Nagios to monitor AFS servers
  Nagios is a host/service/network monitoring and management system.  This
  package provides plugins for Nagios to monitor AFS file servers and
