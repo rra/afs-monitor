@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-our $VERSION = '@VERSION@ @DATE@';
+our $VERSION = '2.0 (2010-11-10)';
 #
 # check_afs_udebug -- Check AFS database servers using udebug for Nagios.
 #
