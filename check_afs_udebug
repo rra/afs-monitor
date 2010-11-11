@@ -1,18 +1,18 @@
 #!/usr/bin/perl -w
 our $VERSION = '@VERSION@ @DATE@';
 #
-# check_udebug -- Check AFS database servers using udebug for Nagios.
+# check_afs_udebug -- Check AFS database servers using udebug for Nagios.
+#
+# Takes a hostname and a port number and checks the udebug output for that
+# host and port.  Reports an error if the recovery state is not 1f on the sync
+# site (ensuring that it considers all of the other servers up-to-date) or if
+# any of the servers don't believe there is a sync site.
 #
 # Written by Russ Allbery <rra@stanford.edu>
 # Copyright 2004, 2010 Board of Trustees, Leland Stanford Jr. University
 #
 # This program is free software; you may redistribute it and/or modify it
 # under the same terms as Perl itself.
-#
-# Takes a hostname and a port number and checks the udebug output for that
-# host and port.  Reports an error if the recovery state is not 1f on the sync
-# site (ensuring that it considers all of the other servers up-to-date) or if
-# any of the servers don't believe there is a sync site.
 
 ##############################################################################
 # Modules and declarations
@@ -63,7 +63,7 @@ if ($help) {
     exec ('perldoc', '-t', $0) or die "Cannot fork: $!\n";
 } elsif ($version) {
     my $version = $VERSION;
-    print "check_udebug $version\n";
+    print "check_afs_udebug $version\n";
     exit 0;
 }
 syntax ("extra arguments on command line") if @ARGV;
@@ -118,16 +118,16 @@ if ($issync && !$recovery) {
 
 =head1 NAME
 
-check_udebug - Check AFS servers for blocked connections in Nagios
+check_afs_udebug - Check AFS servers for blocked connections in Nagios
 
 =head1 SYNOPSIS
 
-B<check_udebug> [B<-hV>] [B<-t> I<timeout>] B<-H> I<host> B<-p> I<port>
+B<check_afs_udebug> [B<-hV>] [B<-t> I<timeout>] B<-H> I<host> B<-p> I<port>
 
 =head1 DESCRIPTION
 
-B<check_udebug> is a Nagios plugin for checking AFS database servers to
-make sure the Ubik replication between the database servers is running
+B<check_afs_udebug> is a Nagios plugin for checking AFS database servers
+to make sure the Ubik replication between the database servers is running
 correctly.  B<udebug> is used to connect to the specified port on the
 specified server.  The port should generally be one of 7002 (ptserver),
 7003 (vlserver), or 7004 (kaserver).  The resulting output is checked to
@@ -135,9 +135,9 @@ make sure that the recovery state is 1f if that server is the sync site,
 or that a sync site is known if that server doesn't claim to be the sync
 site.
 
-B<check_udebug> will always print out a single line of output.  That line
-will be C<UBIK OK> if everything is fine, or C<UBIK CRITICAL - > followed
-by an error message otherwise.
+B<check_afs_udebug> will always print out a single line of output.  That
+line will be C<UBIK OK> if everything is fine, or C<UBIK CRITICAL - >
+followed by an error message otherwise.
 
 =head1 OPTIONS
 
@@ -145,8 +145,8 @@ by an error message otherwise.
 
 =item B<-H> I<host>, B<--hostname>=I<host>
 
-The AFS database server whose Ubik status B<check_udebug> should check.
-This option is required.
+The AFS database server whose Ubik status B<check_afs_udebug> should
+check.  This option is required.
 
 =item B<-h>, B<--help>
 
@@ -166,16 +166,16 @@ seconds.
 
 =item B<-V>, B<--version>
 
-Print out the version of B<check_udebug> and quit.
+Print out the version of B<check_afs_udebug> and quit.
 
 =back
 
 =head1 EXIT STATUS
 
-B<check_udebug> follows the standard Nagios exit status requirements.
+B<check_afs_udebug> follows the standard Nagios exit status requirements.
 This means that it will exit with status 0 if there are no problems or
 with status 2 if there are critical problems.  For other errors, such as
-invalid syntax, B<check_udebug> will exit with status 3.
+invalid syntax, B<check_afs_udebug> will exit with status 3.
 
 =head1 BUGS
 

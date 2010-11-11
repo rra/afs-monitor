@@ -5,37 +5,42 @@ afs-monitor 2.0 (unreleased)
     Initial tarball release, based on check_afsspace 1.16, check_bos 1.7,
     check_rxdebug 1.11, and check_udebug 1.3.
 
+    Rename check_afsspace to check_afs_space, check_bos to check_afs_bos,
+    check_rxdebug to check_afs_rxdebug, and check_udebug to
+    check_afs_udebug for more consistent naming and easier identification
+    of the AFS Nagios probes.
+
     Add check_afs_quotas, which monitors AFS volumes for quota usage,
     either for specific volumes or for all volumes on a particular server
     (and optionally partition).  Based on a script by Steve Rader.
 
-    Support checking a single partition in check_afsspace and print more
+    Support checking a single partition in check_afs_space and print more
     verbose information about total, used, and free space in that mode.
     Format partition sizes using Number::Format if available.  Based on
     work by Steve Rader.
 
     If the salvager is running (such as when started manually with bos
-    salvage), check_bos now reports a warning stating that, rather than a
-    critical error showing the auxiliary status line.  Reported by Steve
-    Rader.
+    salvage), check_afs_wbos now reports a warning stating that, rather
+    than a critical error showing the auxiliary status line.  Reported by
+    Steve Rader.
 
     Print an UNKNOWN status on standard output on syntax errors in all
     scripts, rather than reporting the problem only to standard error.
     Check that the host to check was specified and report a syntax error
     if it wasn't.  Thanks, Tobias Wolter.
 
-    Ignore "bos: running unauthenticated" in check_bos, since bos status
-    is always run unauthenticated.
+    Ignore "bos: running unauthenticated" in check_afs_bos, since bos
+    status is always run unauthenticated.
 
-    Add support for reporting warnings in check_bos and report a warning
-    if there is inappropriate access on server directories.  Patch from
-    Steve Rader.
+    Add support for reporting warnings in check_afs_bos and report a
+    warning if there is inappropriate access on server directories.  Patch
+    from Steve Rader.
 
-    If check_bos is successful, report the number of instances running
+    If check_afs_bos is successful, report the number of instances running
     normally.  Patch from Steve Rader.
 
     Look for rxdebug in /usr/sbin and /usr/local/sbin since OpenAFS
     installs it into sbindir by default.
 
-    Report the database version as extra information in check_udebug if
-    there are no errors or warnings.
+    Report the database version as extra information in check_afs_udebug
+    if there are no errors or warnings.

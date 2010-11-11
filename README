@@ -11,12 +11,12 @@ BLURB
 
   afs-monitor provides Nagios-compatible probe scripts that can be used to
   monitor AFS servers.  It contains five scripts: check_afs_quotas, which
-  monitors AFS volumes for quota usage; check_afsspace, which monitors
-  file server partitions for disk usage; check_bos, which monitors any
+  monitors AFS volumes for quota usage; check_afs_space, which monitors
+  file server partitions for disk usage; check_afs_bos, which monitors any
   bosserver-managed set of processes for problems reported by bos;
-  check_rxdebug, which monitors AFS fileservers for connections waiting
-  for a thread; and check_udebug, which monitors Ubik services (such as
-  vlserver and ptserver) for replication and quorum problems.
+  check_afs_rxdebug, which monitors AFS fileservers for connections
+  waiting for a thread; and check_afs_udebug, which monitors Ubik services
+  (such as vlserver and ptserver) for replication and quorum problems.
 
 DESCRIPTION
 
@@ -33,17 +33,17 @@ DESCRIPTION
   server or server partition for quota usage and reports errors or
   warnings if the used space is over a configurable threshold.
 
-  check_afsspace uses vos partinfo to check the available space on each
+  check_afs_space uses vos partinfo to check the available space on each
   partition on a file server.  It reports a critical error if the
   percentage used is above a configurable threshold (90% by default) and a
   warning if it is above a lower configurable threshold (85% by default).
 
-  check_bos runs bos status on a file server or volume location server and
-  scans the output, making sure that all commands are running normally and
-  the file server isn't salvaging.  If it sees any output it doesn't
+  check_afs_bos runs bos status on a file server or volume location server
+  and scans the output, making sure that all commands are running normally
+  and the file server isn't salvaging.  If it sees any output it doesn't
   expect from bos status, it reports that output in an alert.
 
-  check_rxdebug runs rxdebug against a file server and looks for any
+  check_afs_rxdebug runs rxdebug against a file server and looks for any
   client connections that are in the state "waiting for a thread."  This
   indicates client connections that are blocked waiting for a file server
   thread.  We've found this to be a reliable test for detecting serious
@@ -52,7 +52,7 @@ DESCRIPTION
   and a warning if it is above a lower configurable threshold (2 by
   default).
 
-  check_udebug runs udebug against a ubik service (vlserver, ptserver,
+  check_afs_udebug runs udebug against a ubik service (vlserver, ptserver,
   kaserver, or buserver) and makes sure that it is in a reasonable state.
   It checked to be sure that there is a sync site for the service, and
   when there is, that the sync site believes that the recovery state is 1f
@@ -61,7 +61,8 @@ DESCRIPTION
 
   These scripts were written by Xueshan Feng, Neil Crellin, Quanah
   Gibson-Mount, and Russ Allbery and are currently maintained by Russ
-  Allbery.
+  Allbery.  Many modifications to the scripts were based on work by Steve
+  Rader.
 
 REQUIREMENTS
 
@@ -70,7 +71,7 @@ REQUIREMENTS
   bos, rxdebug, and udebug) and expect them to be in either /usr/bin or in
   /usr/local/bin.
 
-  check_afs_quotas and check_afsspace will use Number::Format, if
+  check_afs_quotas and check_afs_space will use Number::Format, if
   available, to format sizes with IEC 60027 prefixes.
 
 INSTALLATION
@@ -84,13 +85,13 @@ INSTALLATION
 
   You can then use the scripts directly with commands such as:
 
-      check_afsspace -H afs1
+      check_afs_space -H afs1
 
   To use the scripts in a Nagios probe, configure a command such as:
 
       define command {
-          command_name check_afsspace
-          command_line /path/to/install/check_afsspace -H $HOSTADDRESS$
+          command_name check_afs_space
+          command_line /path/to/install/check_afs_space -H $HOSTADDRESS$
       }
 
   changing the path to the script to wherever you installed the scripts.

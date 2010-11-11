@@ -1,7 +1,13 @@
 #!/usr/bin/perl -w
 our $VERSION = '@VERSION@ @DATE@';
 #
-# check_rxdebug -- Nagios AFS server check for waiting connections.
+# check_afs_rxdebug -- Nagios AFS server check for waiting connections.
+#
+# Expects a file server with the -H option and runs rxdebug against that file
+# server, looking for any connections that are waiting for a thread.  Exits
+# with status 1 if there are more than two connections in that state (a
+# warning) and with status 2 if there are more than eight connections in that
+# state.  The thresholds can be overridden from the command line.
 #
 # Written by Quanah Gibson-Mount based on work by Neil Crellin
 # Updated by Russ Allbery <rra@stanford.edu>
@@ -10,12 +16,6 @@ our $VERSION = '@VERSION@ @DATE@';
 #
 # This program is free software; you may redistribute it and/or modify it
 # under the same terms as Perl itself.
-#
-# Expects a file server with the -H option and runs rxdebug against that file
-# server, looking for any connections that are waiting for a thread.  Exits
-# with status 1 if there are more than two connections in that state (a
-# warning) and with status 2 if there are more than eight connections in that
-# state.  The thresholds can be overridden from the command line.
 
 ##############################################################################
 # Modules and declarations
@@ -74,7 +74,7 @@ if ($help) {
     exec ('perldoc', '-t', $0) or die "Cannot fork: $!\n";
 } elsif ($version) {
     my $version = $VERSION;
-    print "check_rxdebug $version\n";
+    print "check_afs_rxdebug $version\n";
     exit 0;
 }
 syntax ("extra arguments on command line") if @ARGV;
@@ -131,26 +131,26 @@ if ($blocked >= $CRITICAL) {
 
 =head1 NAME
 
-check_rxdebug - Check AFS servers for blocked connections in Nagios
+check_afs_rxdebug - Check AFS servers for blocked connections in Nagios
 
 =head1 SYNOPSIS
 
-B<check_rxdebug> [B<-hV>] [B<-c> I<threshold>] [B<-w> I<threshold>]
+B<check_afs_rxdebug> [B<-hV>] [B<-c> I<threshold>] [B<-w> I<threshold>]
     [B<-t> I<timeout>] B<-H> I<host>
 
 =head1 DESCRIPTION
 
-B<check_rxdebug> is a Nagios plugin for checking AFS file servers to see
-if there are client connections waiting for a free thread.  If there are
-more than a few of these, AFS performance tends to be very slow; this is a
-fairly reliable way to catch overloaded file servers.  By default,
-B<check_rxdebug> returns a critical error if there are more than eight
+B<check_afs_rxdebug> is a Nagios plugin for checking AFS file servers to
+see if there are client connections waiting for a free thread.  If there
+are more than a few of these, AFS performance tends to be very slow; this
+is a fairly reliable way to catch overloaded file servers.  By default,
+B<check_afs_rxdebug> returns a critical error if there are more than eight
 connections waiting for a free thread and a warning if there are more than
 two.  These thresholds can be changed with the B<-c> and B<-w> options.
 
-B<check_rxdebug> will always print out a single line of output including
-the number of blocked connections, displaying whether this is critical, a
-warning, or okay.
+B<check_afs_rxdebug> will always print out a single line of output
+including the number of blocked connections, displaying whether this is
+critical, a warning, or okay.
 
 =head1 OPTIONS
 
@@ -163,8 +163,8 @@ which should be an integer.  The default is 8.
 
 =item B<-H> I<host>, B<--hostname>=I<host>
 
-The AFS file server whose connections B<check_rxdebug> should check.  This
-option is required.
+The AFS file server whose connections B<check_afs_rxdebug> should check.
+This option is required.
 
 =item B<-h>, B<--help>
 
@@ -178,7 +178,7 @@ seconds.
 
 =item B<-V>, B<--version>
 
-Print out the version of B<check_rxdebug> and quit.
+Print out the version of B<check_afs_rxdebug> and quit.
 
 =item B<-w> I<threshold>, B<--warning>=I<threshold>
 
@@ -189,11 +189,11 @@ should be an integer.  The default is 2.
 
 =head1 EXIT STATUS
 
-B<check_rxdebug> follows the standard Nagios exit status requirements.
+B<check_afs_rxdebug> follows the standard Nagios exit status requirements.
 This means that it will exit with status 0 if there are no problems, with
 status 1 if there is a warning, and with status 2 if there is a critical
-problem.  For other errors, such as invalid syntax, B<check_rxdebug> will
-exit with status 3.
+problem.  For other errors, such as invalid syntax, B<check_afs_rxdebug>
+will exit with status 3.
 
 =head1 BUGS
 

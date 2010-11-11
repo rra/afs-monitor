@@ -1,7 +1,13 @@
 #!/usr/bin/perl -w
 our $VERSION = '@VERSION@ @DATE@';
 #
-# check_bos -- Monitor AFS bos output for problems in Nagios.
+# check_afs_bos -- Monitor AFS bos output for problems in Nagios.
+#
+# Given an AFS server (file or VLDB), runs bos status on each one.  Checks to
+# see if there is a communication failure, and also checks to see if anything
+# in the output looks unusual or wrong.  If either of these conditions are
+# true, print that information to STDOUT.  Suitable for being run inside
+# Nagios.
 #
 # Written by Russ Allbery <rra@stanford.edu>
 # Based on an earlier script by Neil Crellin <neilc@stanford.edu>
@@ -9,12 +15,6 @@ our $VERSION = '@VERSION@ @DATE@';
 #
 # This program is free software; you may redistribute it and/or modify it
 # under the same terms as Perl itself.
-#
-# Given an AFS server (file or VLDB), runs bos status on each one.  Checks to
-# see if there is a communication failure, and also checks to see if anything
-# in the output looks unusual or wrong.  If either of these conditions are
-# true, print that information to STDOUT.  Suitable for being run inside
-# Nagios.
 
 ##############################################################################
 # Modules and declarations
@@ -86,7 +86,7 @@ if ($help) {
     exec ('perldoc', '-t', $0) or die "Cannot fork: $!\n";
 } elsif ($version) {
     my $version = $VERSION;
-    print "check_bos $version\n";
+    print "check_afs_bos $version\n";
     exit 0;
 }
 syntax ("extra arguments on command line") if @ARGV;
@@ -166,26 +166,26 @@ exit 0;
 
 =head1 NAME
 
-check_bos - Monitor AFS bos output for problems in Nagios
+check_afs_bos - Monitor AFS bos output for problems in Nagios
 
 =head1 SYNOPSIS
 
-B<check_bos> [B<-hV>] [B<-t> I<timeout>] B<-H> I<host>
+B<check_afs_bos> [B<-hV>] [B<-t> I<timeout>] B<-H> I<host>
 
 =head1 DESCRIPTION
 
-B<check_bos> is a Nagios plugin for querying the AFS bosserver for process
-status and reporting an alert if there are any unexpected lines in the bos
-output.  The acceptable lines of output from B<bos> are configured at the
-top of this script; they should be generally suitable for most sites, but
-may require some customization.
+B<check_afs_bos> is a Nagios plugin for querying the AFS bosserver for
+process status and reporting an alert if there are any unexpected lines in
+the bos output.  The acceptable lines of output from B<bos> are configured
+at the top of this script; they should be generally suitable for most
+sites, but may require some customization.
 
-B<check_bos> will always print out a single line of output.  If there is a
-line that isn't matched by any regexes identifying acceptable lines, it
-will output the first non-matching line prefixed by C<BOS CRITICAL>.  If
-the salvager is running (such as when started by C<bos salvage>) or other
-warnings are found, it will print that warning information prefixed by
-C<BOS WARNING>.  Otherwise, it will output C<BOS OK>.  Note that this
+B<check_afs_bos> will always print out a single line of output.  If there
+is a line that isn't matched by any regexes identifying acceptable lines,
+it will output the first non-matching line prefixed by C<BOS CRITICAL>.
+If the salvager is running (such as when started by C<bos salvage>) or
+other warnings are found, it will print that warning information prefixed
+by C<BOS WARNING>.  Otherwise, it will output C<BOS OK>.  Note that this
 monitoring may not catch such things as a service being constantly
 restarted if it happens to be up and running normally each time the probe
 runs; it doesn't pay any attention to the last start time, the last error
@@ -200,8 +200,8 @@ process.
 
 =item B<-H> I<host>, B<--hostname>=I<host>
 
-The AFS server whose B<bos> status B<check_bos> should check.  This option
-is required.
+The AFS server whose B<bos> status B<check_afs_bos> should check.  This
+option is required.
 
 =item B<-h>, B<--help>
 
@@ -215,17 +215,17 @@ seconds.
 
 =item B<-V>, B<--version>
 
-Print out the version of B<check_bos> and quit.
+Print out the version of B<check_afs_bos> and quit.
 
 =back
 
 =head1 EXIT STATUS
 
-B<check_bos> follows the standard Nagios exit status requirements.  This
-means that it will exit with status 0 if there are no problems, with
+B<check_afs_bos> follows the standard Nagios exit status requirements.
+This means that it will exit with status 0 if there are no problems, with
 status 1 if the salvager is running, or with status 2 if there is a
-problem detected.  For other errors, such as invalid syntax, B<check_bos>
-will exit with status 3.
+problem detected.  For other errors, such as invalid syntax,
+B<check_afs_bos> will exit with status 3.
 
 =head1 BUGS
 

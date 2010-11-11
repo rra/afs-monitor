@@ -1,7 +1,12 @@
 #!/usr/bin/perl -w
 our $VERSION = '@VERSION@ @DATE@';
 #
-# check_afsspace -- Monitor AFS disk space usage under Nagios.
+# check_afs_space -- Monitor AFS disk space usage under Nagios.
+#
+# Expects a host with the -H option and checks the partition usage with vos
+# partinfo.  Exits with status 1 if the free space is below a warning
+# percentage and with status 2 if the free space is above a critical
+# percentage (this works with the Nagios check architecture).
 #
 # Written by Susan Feng <sfeng@stanford.edu>
 # Updated by Russ Allbery <rra@stanford.edu>
@@ -9,11 +14,6 @@ our $VERSION = '@VERSION@ @DATE@';
 #
 # This program is free software; you may redistribute it and/or modify it
 # under the same terms as Perl itself.
-#
-# Expects a host with the -H option and checks the partition usage with vos
-# partinfo.  Exits with status 1 if the free space is below a warning
-# percentage and with status 2 if the free space is above a critical
-# percentage (this works with the Nagios check architecture).
 
 ##############################################################################
 # Modules and declarations
@@ -81,7 +81,7 @@ if ($help) {
     exec ('perldoc', '-t', $0) or die "Cannot fork: $!\n";
 } elsif ($version) {
     my $version = $VERSION;
-    print "check_afsspace $version\n";
+    print "check_afs_space $version\n";
     exit 0;
 }
 syntax ("extra arguments on command line") if @ARGV;
@@ -164,27 +164,27 @@ if (@critical) {
 
 =head1 NAME
 
-check_afsspace - Monitor AFS disk space usage under Nagios
+check_afs_space - Monitor AFS disk space usage under Nagios
 
 =head1 SYNOPSIS
 
-B<check_afsspace> [B<-hV>] [B<-c> I<threshold>] [B<-w> I<threshold>]
+B<check_afs_space> [B<-hV>] [B<-c> I<threshold>] [B<-w> I<threshold>]
     [B<-p> I<partition>] [B<-t> I<timeout>] B<-H> I<host>
 
 =head1 DESCRIPTION
 
-B<check_afsspace> is a Nagios plugin for checking free space on AFS server
+B<check_afs_space> is a Nagios plugin for checking free space on AFS server
 partitions.  It uses C<vos partinfo> to obtain the free space on the
 partitions on an AFS server and will return an alert if the percentage of
 used space exceeds a threshold.  By default, it returns a critical error
 if the used space is over 90% and a warning if it is over 85% (changaable
 with the B<-c> and B<-w> options).
 
-If C<vos partinfo> doesn't return within the timeout, B<check_afsspace>
+If C<vos partinfo> doesn't return within the timeout, B<check_afs_space>
 will return a critical error.  The default timeout is 300 seconds,
 changeable with the B<-t> option.
 
-B<check_afsspace> will always print out a single line of output, giving
+B<check_afs_space> will always print out a single line of output, giving
 the critical errors if any, otherwise giving the warnings if any,
 otherwise listing in an abbreviated form the percentage free space for all
 partitions.
@@ -204,7 +204,7 @@ an integer percentage.  The default is 90.
 
 =item B<-H> I<host>, B<--hostname>=I<host>
 
-The AFS file server whose free space B<check_afsspace> should check.  This
+The AFS file server whose free space B<check_afs_space> should check.  This
 option is required.
 
 =item B<-h>, B<--help>
@@ -227,7 +227,7 @@ is 300 seconds.
 
 =item B<-V>, B<--version>
 
-Print out the version of B<check_afsspace> and quit.
+Print out the version of B<check_afs_space> and quit.
 
 =item B<-w> I<threshold>, B<--warning>=I<threshold>
 
@@ -238,11 +238,11 @@ an integer percentage.  The default is 85.
 
 =head1 EXIT STATUS
 
-B<check_afsspace> follows the standard Nagios exit status requirements.
+B<check_afs_space> follows the standard Nagios exit status requirements.
 This means that it will exit with status 0 if there are no problems, with
 status 2 if there is at least one critical partition for that server, and
 with status 1 if there are no critical partitions but at least one warning
-partition.  For other errors, such as invalid syntax, B<check_afsspace>
+partition.  For other errors, such as invalid syntax, B<check_afs_space>
 will exit with status 3.
 
 =head1 BUGS
