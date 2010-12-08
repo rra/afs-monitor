@@ -1,0 +1,10 @@
+                          afs-monitor To-Do List
+
+Nagios standards:
+
+ * Add support for the -v option to each script, providing more verbose
+   output.
+
+ * Fix the usage message for invalid options to follow Nagios standards.
+
+ * Fix the output from the -h option to follow Nagios standards.

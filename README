@@ -1,4 +1,4 @@
-                         afs-monitor release 2.0
+                         afs-monitor release 2.1
             (Nagios-compatible probes to monitor AFS servers)
 
               Maintained by Russ Allbery <rra@stanford.edu>
@@ -98,6 +98,13 @@ INSTALLATION
   You can of course pass additional options here, including making use of
   arguments to the command in the service check definition using $ARG1$
   and so forth.
+
+  The scripts all have default timeouts and check_afs_space and
+  check_afs_rxdebug have default thresholds that you may want to change.
+  You may also want to look at the regexes for acceptable bos status lines
+  in check_afs_bos; for example, if you want to get a warning whenever
+  your file server has a core file, you will want to modify the regex to
+  not filter that out.
 
 HOMEPAGE AND SOURCE REPOSITORY
 

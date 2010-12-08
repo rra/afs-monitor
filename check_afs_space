@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-our $VERSION = '2.0 (2010-12-07)';
+our $VERSION = '2.1 (2010-12-08)';
 #
 # check_afs_space -- Monitor AFS disk space usage under Nagios.
 #
@@ -112,7 +112,7 @@ if ($? != 0) {
     print "AFS CRITICAL - cannot contact server\n";
     exit 2;
 }
-$partition .= ':';
+$partition .= ':' if defined $partition;
 for (@data) {
     my ($part, $free, $total) = (split)[4,5,11];
     next if (defined ($partition) and $part ne $partition);
