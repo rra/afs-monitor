@@ -1,5 +1,10 @@
                      User-Visible afs-monitor Changes
 
+afs-monitor 2.1 (unreleased)
+
+    Fix a bug in check_afs_space introduced in the previous release with
+    checking all partitions on a particular server.
+
 afs-monitor 2.0 (2010-12-07)
 
     Initial tarball release, based on check_afsspace 1.16, check_bos 1.7,

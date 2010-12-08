@@ -112,7 +112,7 @@ if ($? != 0) {
     print "AFS CRITICAL - cannot contact server\n";
     exit 2;
 }
-$partition .= ':';
+$partition .= ':' if defined $partition;
 for (@data) {
     my ($part, $free, $total) = (split)[4,5,11];
     next if (defined ($partition) and $part ne $partition);
