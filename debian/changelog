@@ -1,3 +1,10 @@
+nagios-plugins-afs (2.1-1) unstable; urgency=low
+
+  * New upstream release.
+    - Fix bug in check_afs_space when checking an entire server.
+
+ -- Russ Allbery <rra@debian.org>  Wed, 08 Dec 2010 11:38:50 -0800
+
 nagios-plugins-afs (2.0-1) unstable; urgency=low
 
   * Initial packaging.
