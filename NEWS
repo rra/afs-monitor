@@ -7,6 +7,9 @@ afs-monitor 2.2 (unreleased)
     Patch from Daniel Scott.  Also fall back, for all AFS binaries, to
     using PATH if the binary can't be found in known locations.
 
+    Correctly handle checking quota of volumes with unlimited quota
+    without a division by zero error.  Patch from Erik Dalén.
+
 afs-monitor 2.1 (2010-12-08)
 
     Fix a bug in check_afs_space introduced in the previous release with
