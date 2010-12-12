@@ -125,7 +125,10 @@ sub summarize_volume {
     my $used  = $$results{size};
     my $free  = $total - $used;
     $free = 0 if ($free < 0);
-    my $percent = int ((($total - $free) / $total) * 100);
+    my $percent = 0;
+    if ($total > 0) {
+        $percent = int ((($total - $free) / $total) * 100);
+    }
     if ($FORMAT) {
         $total = format_bytes ($total, mode => 'iec');
         $free  = format_bytes ($free,  mode => 'iec');
