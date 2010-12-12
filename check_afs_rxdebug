@@ -44,7 +44,7 @@ our $TIMEOUT = 60;
 our ($RXDEBUG) = grep { -x $_ }
     qw(/usr/bin/rxdebug /usr/sbin/rxdebug /usr/local/bin/rxdebug
        /usr/local/sbin/rxdebug);
-$RXDEBUG ||= '/usr/bin/rxdebug';
+$RXDEBUG ||= 'rxdebug';
 
 ##############################################################################
 # Implementation

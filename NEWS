@@ -1,5 +1,12 @@
                      User-Visible afs-monitor Changes
 
+afs-monitor 2.2 (unreleased)
+
+    The vos binary is installed in sbin by the Red Hat packages and the
+    default upstream installation rules, so check in sbin as well as bin.
+    Patch from Daniel Scott.  Also fall back, for all AFS binaries, to
+    using PATH if the binary can't be found in known locations.
+
 afs-monitor 2.1 (2010-12-08)
 
     Fix a bug in check_afs_space introduced in the previous release with

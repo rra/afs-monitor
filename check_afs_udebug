@@ -34,7 +34,7 @@ our $TIMEOUT = 10;
 # The full path to udebug.  Make sure that this is on local disk so that
 # monitoring doesn't have an AFS dependency.
 our ($UDEBUG) = grep { -x $_ } qw(/usr/bin/udebug /usr/local/bin/udebug);
-$UDEBUG ||= '/usr/bin/udebug';
+$UDEBUG ||= 'udebug';
 
 ##############################################################################
 # Implementation

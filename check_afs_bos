@@ -33,7 +33,7 @@ use Getopt::Long qw(GetOptions);
 # The full path to bos.  Make sure that this is on local disk so that
 # monitoring doesn't have an AFS dependency.
 our ($BOS) = grep { -x $_ } qw(/usr/bin/bos /usr/local/bin/bos);
-$BOS ||= '/usr/bin/bos';
+$BOS ||= 'bos';
 
 # The default timeout in seconds (implemented by alarm) for rxdebug.
 our $TIMEOUT = 10;
