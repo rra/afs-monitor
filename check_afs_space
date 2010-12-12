@@ -49,7 +49,7 @@ our $TIMEOUT = 300;
 
 # The full path to vos.  Make sure that this is on local disk so that
 # monitoring doesn't have an AFS dependency.
-our ($VOS) = grep { -x $_ } qw(/usr/bin/vos /usr/local/bin/vos);
+our ($VOS) = grep { -x $_ } qw(/usr/bin/vos /usr/local/bin/vos /usr/sbin/vos);
 $VOS ||= '/usr/bin/vos';
 
 ##############################################################################
