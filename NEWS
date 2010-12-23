@@ -6,6 +6,9 @@ afs-monitor 2.2 (unreleased)
     data for the percent usage of each partition checked.  Based on a
     patch by Breandan Dezendorf.
 
+    Correctly handle partitions containing no read/write volumes in
+    check_afs_quotas.  Thanks, Daniel Scott.
+
     The vos binary is installed in sbin by the Red Hat packages and the
     default upstream installation rules, so check in sbin as well as bin.
     Patch from Daniel Scott.  Also fall back, for all AFS binaries, to
