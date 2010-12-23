@@ -67,9 +67,10 @@ sub syntax {
 }
 
 # Parse command line options.
-my ($help, $host, $partition, $version);
+my ($help, $host, $partition, $printdata, $version);
 Getopt::Long::config ('bundling', 'no_ignore_case');
 GetOptions ('c|critical=i'  => \$CRITICAL,
+            'd|perfdata'    => \$printdata,
             'H|hostname=s'  => \$host,
             'h|help'        => \$help,
             'p|partition=s' => \$partition,
@@ -81,8 +82,7 @@ if ($help) {
     print "Feeding myself to perldoc, please wait....\n";
     exec ('perldoc', '-t', $0) or die "Cannot fork: $!\n";
 } elsif ($version) {
-    my $version = $VERSION;
-    print "check_afs_space $version\n";
+    print "check_afs_space $VERSION\n";
     exit 0;
 }
 syntax ("extra arguments on command line") if @ARGV;
@@ -104,8 +104,9 @@ alarm ($TIMEOUT);
 
 # Get the partinfo information and calculate the percentage free for each
 # partition.  Accumulate critical messages in @critical and warnings in
-# @warnings.  Accumulate all percentages in @all.
-my (@critical, @warnings, @all);
+# @warnings.  Accumulate all percentages in @all.  Accumulate performance data
+# in @perfdata.
+my (@critical, @warnings, @all, @perfdata);
 my $command = "$VOS partinfo -server '$host'";
 $command .= " -partition $partition" if defined ($partition);
 my @data = `$command 2> /dev/null`;
@@ -124,6 +125,9 @@ for (@data) {
         $free  = format_bytes ($free,  mode => 'iec');
         $used  = format_bytes ($used,  mode => 'iec');
     }
+    my $ppart = $part . '_percent';
+    $ppart =~ tr%:/%%d;
+    push (@perfdata, "$ppart=$percent\%;$WARNINGS;$CRITICAL;0;100");
     my $summary;
     if ($partition) {
         $summary = "$part$percent% used"
@@ -148,14 +152,18 @@ unless (@all) {
 }
 
 # Exit with the appropriate error messages.
+my $perfdata = '';
+if ($printdata) {
+    $perfdata = ' | ' . join (' ', @perfdata);
+}
 if (@critical) {
-    print "AFS CRITICAL - @critical\n";
+    print "AFS CRITICAL - @critical$perfdata\n";
     exit 2;
 } elsif (@warnings) {
-    print "AFS WARNING - @warnings\n";
+    print "AFS WARNING - @warnings$perfdata\n";
     exit 1;
 } else {
-    print "AFS OK - @all\n";
+    print "AFS OK - @all$perfdata\n";
     exit 0;
 }
 
@@ -169,7 +177,7 @@ check_afs_space - Monitor AFS disk space usage under Nagios
 
 =head1 SYNOPSIS
 
-B<check_afs_space> [B<-hV>] [B<-c> I<threshold>] [B<-w> I<threshold>]
+B<check_afs_space> [B<-dhV>] [B<-c> I<threshold>] [B<-w> I<threshold>]
     [B<-p> I<partition>] [B<-t> I<timeout>] B<-H> I<host>
 
 =head1 DESCRIPTION
@@ -202,6 +210,14 @@ about the total, used, and free space is given in the one line of output.
 
 Change the critical percentage threshold to I<threshold>, which should be
 an integer percentage.  The default is 90.
+
+=item B<-d>, B<--perfdata>
+
+Include performance data in the plugin output.  This adds an additional
+section of the output following a vertical bar (C<|>) following the Nagios
+plugin standard for performance data.  There will be one variable for each
+partition checked, named C<I<partition>_percent>, where I<partition> is the
+partition without the leading slash.  The value will be the usage percentage.
 
 =item B<-H> I<host>, B<--hostname>=I<host>
 

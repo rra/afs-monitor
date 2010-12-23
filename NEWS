@@ -2,6 +2,10 @@
 
 afs-monitor 2.2 (unreleased)
 
+    Add a -d flag to check_afs_space that prints out Nagios performance
+    data for the percent usage of each partition checked.  Based on a
+    patch by Breandan Dezendorf.
+
     The vos binary is installed in sbin by the Red Hat packages and the
     default upstream installation rules, so check in sbin as well as bin.
     Patch from Daniel Scott.  Also fall back, for all AFS binaries, to
