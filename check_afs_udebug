@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-our $VERSION = '2.1 (2010-12-08)';
+our $VERSION = '2.2 (2011-03-03)';
 #
 # check_afs_udebug -- Check AFS database servers using udebug for Nagios.
 #
@@ -9,7 +9,8 @@ our $VERSION = '2.1 (2010-12-08)';
 # any of the servers don't believe there is a sync site.
 #
 # Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2004, 2010 Board of Trustees, Leland Stanford Jr. University
+# Copyright 2004, 2010
+#     The Board of Trustees of the Leland Stanford Junior University
 #
 # This program is free software; you may redistribute it and/or modify it
 # under the same terms as Perl itself.
@@ -34,7 +35,7 @@ our $TIMEOUT = 10;
 # The full path to udebug.  Make sure that this is on local disk so that
 # monitoring doesn't have an AFS dependency.
 our ($UDEBUG) = grep { -x $_ } qw(/usr/bin/udebug /usr/local/bin/udebug);
-$UDEBUG ||= '/usr/bin/udebug';
+$UDEBUG ||= 'udebug';
 
 ##############################################################################
 # Implementation
@@ -205,7 +206,8 @@ Russ Allbery <rra@stanford.edu>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2004, 2010 Board of Trustees, Leland Stanford Jr. University.
+Copyright 2004, 2010 The Board of Trustees of the Leland Stanford Junior
+University.
 
 This program is free software; you may redistribute it and/or modify it
 under the same terms as Perl itself.

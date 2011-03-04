@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-our $VERSION = '2.1 (2010-12-08)';
+our $VERSION = '2.2 (2011-03-03)';
 #
 # check afs_quotas -- Monitor AFS quota usage under Nagios.
 #
@@ -11,7 +11,8 @@ our $VERSION = '2.1 (2010-12-08)';
 #
 # Written by Russ Allbery <rra@stanford.edu>
 # Based on a script by Steve Rader
-# Copyright 2010 Board of Trustees, Leland Stanford Jr. University
+# Copyright 2010
+#     The Board of Trustees of the Leland Stanford Junior University
 #
 # This program is free software; you may redistribute it and/or modify it
 # under the same terms as Perl itself.
@@ -50,8 +51,9 @@ our $TIMEOUT = 300;
 
 # The full path to vos.  Make sure that this is on local disk so that
 # monitoring doesn't have an AFS dependency.
-our ($VOS) = grep { -x $_ } qw(/usr/bin/vos /usr/local/bin/vos);
-$VOS ||= '/usr/bin/vos';
+our ($VOS) = grep { -x $_ }
+    qw(/usr/bin/vos /usr/sbin/vos /usr/local/bin/vos /usr/local/sbin/vos);
+$VOS ||= 'vos';
 
 ##############################################################################
 # AFS operations
@@ -105,7 +107,7 @@ sub serverinfo {
             $volume = $1;
             $results{$volume}{size} = $2;
         } elsif (/^\s+MaxQuota\s+(\d+) K\s*$/) {
-            $results{$volume}{quota} = $1;
+            $results{$volume}{quota} = $1 if defined $volume;
         }
     }
     return %results;
@@ -124,7 +126,10 @@ sub summarize_volume {
     my $used  = $$results{size};
     my $free  = $total - $used;
     $free = 0 if ($free < 0);
-    my $percent = int ((($total - $free) / $total) * 100);
+    my $percent = 0;
+    if ($total > 0) {
+        $percent = int ((($total - $free) / $total) * 100);
+    }
     if ($FORMAT) {
         $total = format_bytes ($total, mode => 'iec');
         $free  = format_bytes ($free,  mode => 'iec');
@@ -351,7 +356,8 @@ Written by Russ Allbery based on a similar script by Steve Rader.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2010 Board of Trustees, Leland Stanford Jr. University.
+Copyright 2010 The Board of Trustees of the Leland Stanford Junior
+University.
 
 This program is free software; you may redistribute it and/or modify it
 under the same terms as Perl itself.

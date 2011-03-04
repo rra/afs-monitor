@@ -1,12 +1,12 @@
 The afs-monitor package is:
 
-  Copyright 2003, 2004, 2005, 2006, 2010 Board of Trustees, Leland
-  Stanford Jr. University.
+  Copyright 2003, 2004, 2005, 2006, 2010, 2011 The Board of Trustees of
+  the Leland Stanford Junior University.
 
 and released under the following license:
 
-  This program is free software; you may redistribute it and/or modify it
-  under the same terms as Perl itself.
+  These programs are free software; you may redistribute them and/or
+  modify them under the same terms as Perl itself.
 
 This means that you may choose between the two licenses that Perl is
 released under: the GNU GPL (any version) and the Artistic License.
