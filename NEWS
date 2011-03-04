@@ -1,6 +1,6 @@
                      User-Visible afs-monitor Changes
 
-afs-monitor 2.2 (unreleased)
+afs-monitor 2.2 (2011-03-03)
 
     Add a -d flag to check_afs_space that prints out Nagios performance
     data for the percent usage of each partition checked.  Based on a
