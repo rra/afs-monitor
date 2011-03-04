@@ -1,3 +1,15 @@
+nagios-plugins-afs (2.2-1) unstable; urgency=low
+
+  * New upstream release.
+    - Add -d flag to check_afs_space to print Nagios performance data
+      about the percent usage of each partition checked.
+    - Handle partitions with no read/write volumes in check_afs_quotas.
+    - Search sbin for the vos binary and fall back on PATH for all AFS
+      client binaries in all scripts.
+    - Handle checking quota of volumes with unlimited quota.
+
+ -- Russ Allbery <rra@debian.org>  Thu, 03 Mar 2011 17:56:35 -0800
+
 nagios-plugins-afs (2.1-1) unstable; urgency=low
 
   * New upstream release.
