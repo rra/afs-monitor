@@ -170,7 +170,7 @@ if ($help) {
     exec ('perldoc', '-t', $0) or die "Cannot fork: $!\n";
 } elsif ($version) {
     my $version = $VERSION;
-    print "check_afsspace $version\n";
+    print "check_afs_quotas $version\n";
     exit 0;
 }
 syntax ("extra arguments on command line") if @ARGV;
