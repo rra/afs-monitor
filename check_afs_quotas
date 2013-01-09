@@ -108,6 +108,8 @@ sub serverinfo {
             $results{$volume}{size} = $2;
         } elsif (/^\s+MaxQuota\s+(\d+) K\s*$/) {
             $results{$volume}{quota} = $1 if defined $volume;
+        } elsif (/^\s*$/) { # next volume
+            $volume = undef;
         }
     }
     return %results;
