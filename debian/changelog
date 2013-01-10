@@ -1,3 +1,9 @@
+nagios-plugins-afs (2.2-2) UNRELEASED; urgency=low
+
+  * Update debhelper compatibility level to V9.
+
+ -- Russ Allbery <rra@debian.org>  Wed, 09 Jan 2013 20:30:54 -0800
+
 nagios-plugins-afs (2.2-1) unstable; urgency=low
 
   * New upstream release.
