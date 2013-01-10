@@ -1,6 +1,6 @@
                      User-Visible afs-monitor Changes
 
-afs-monitor 2.3 (unreleased)
+afs-monitor 2.3 (2013-01-09)
 
     Fix bug in check_afs_quotas when checking all volumes on a partition
     that has read-only or backup volumes.  Patch from Michael Meffie.
