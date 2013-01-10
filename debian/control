@@ -5,7 +5,7 @@ Build-Depends: debhelper (>= 9)
 Maintainer: Russ Allbery <rra@debian.org>
 Bugs: mailto:rra@debian.org
 Homepage: http://www.eyrie.org/~eagle/software/afs-monitor/
-Standards-Version: 3.9.1
+Standards-Version: 3.9.4
 Vcs-Git: git://git.eyrie.org/afs/afs-monitor.git
 Vcs-Browser: http://git.eyrie.org/?p=afs/afs-monitor.git
 
