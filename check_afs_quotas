@@ -103,9 +103,9 @@ sub serverinfo {
     my ($volume, %results);
     local $_;
     while (<LVOL>) {
-        if (/^(\S+)\s+\d+ RW\s+(\d+) K\s+On-line\s*$/) {
+        if (/^(\S+)\s+\d+ (RW|RO|BK)\s+(\d+) K\s+On-line\s*$/) {
             $volume = $1;
-            $results{$volume}{size} = $2;
+            $results{$volume}{size} = $3;
         } elsif (/^\s+MaxQuota\s+(\d+) K\s*$/) {
             $results{$volume}{quota} = $1 if defined $volume;
         }
