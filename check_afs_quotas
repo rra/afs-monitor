@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 our $VERSION = '@VERSION@ @DATE@';
 #
-# check afs_quotas -- Monitor AFS quota usage under Nagios.
+# check_afs_quotas -- Monitor AFS quota usage under Nagios.
 #
 # Expects a host with the -H option or a volume with the -n option and checks
 # usage versus quota either for all volumes on that server or only for the
