@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
-our $VERSION = '2.2 (2011-03-03)';
+our $VERSION = '2.3 (2013-01-09)';
 #
-# check afs_quotas -- Monitor AFS quota usage under Nagios.
+# check_afs_quotas -- Monitor AFS quota usage under Nagios.
 #
 # Expects a host with the -H option or a volume with the -n option and checks
 # usage versus quota either for all volumes on that server or only for the
@@ -11,7 +11,7 @@ our $VERSION = '2.2 (2011-03-03)';
 #
 # Written by Russ Allbery <rra@stanford.edu>
 # Based on a script by Steve Rader
-# Copyright 2010
+# Copyright 2010, 2013
 #     The Board of Trustees of the Leland Stanford Junior University
 #
 # This program is free software; you may redistribute it and/or modify it
@@ -108,6 +108,8 @@ sub serverinfo {
             $results{$volume}{size} = $2;
         } elsif (/^\s+MaxQuota\s+(\d+) K\s*$/) {
             $results{$volume}{quota} = $1 if defined $volume;
+        } elsif (/^\s*$/) { # next volume
+            $volume = undef;
         }
     }
     return %results;
@@ -170,7 +172,7 @@ if ($help) {
     exec ('perldoc', '-t', $0) or die "Cannot fork: $!\n";
 } elsif ($version) {
     my $version = $VERSION;
-    print "check_afsspace $version\n";
+    print "check_afs_quotas $version\n";
     exit 0;
 }
 syntax ("extra arguments on command line") if @ARGV;
@@ -236,6 +238,9 @@ if (defined ($volume)) {
 # Documentation
 ##############################################################################
 
+=for stopwords
+AFS Crellin Nagios Rader afs-monitor -hV util -vv
+
 =head1 NAME
 
 check_afs_quotas - Monitor AFS quota usage under Nagios
@@ -250,7 +255,7 @@ B<check_afs_quotas> [B<-hV>] [B<-c> I<threshold>] [B<-w> I<threshold>]
 B<check_afs_quotas> is a Nagios plugin for checking free space in AFS
 volumes based on the allocated quota for the volume.  It uses either C<vos
 examine> or C<vos listvol> to obtain the quota and current usage for
-either a single volume or all volumes on a server or server parittion and
+either a single volume or all volumes on a server or server partition and
 will return an alert if the percentage of quota used is over a threshold.
 By default, it returns a critical error if the used quota is over 90% and
 a warning if it is over 85% (changeable with the B<-c> and B<-w> options).
@@ -356,8 +361,8 @@ Written by Russ Allbery based on a similar script by Steve Rader.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2010 The Board of Trustees of the Leland Stanford Junior
-University.
+Copyright 2010, 2013 The Board of Trustees of the Leland Stanford Junior
+University
 
 This program is free software; you may redistribute it and/or modify it
 under the same terms as Perl itself.

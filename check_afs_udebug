@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-our $VERSION = '2.2 (2011-03-03)';
+our $VERSION = '2.3 (2013-01-09)';
 #
 # check_afs_udebug -- Check AFS database servers using udebug for Nagios.
 #
@@ -9,7 +9,7 @@ our $VERSION = '2.2 (2011-03-03)';
 # any of the servers don't believe there is a sync site.
 #
 # Written by Russ Allbery <rra@stanford.edu>
-# Copyright 2004, 2010
+# Copyright 2004, 2010, 2013
 #     The Board of Trustees of the Leland Stanford Junior University
 #
 # This program is free software; you may redistribute it and/or modify it
@@ -117,6 +117,9 @@ if ($issync && !$recovery) {
 # Documentation
 ##############################################################################
 
+=for stopwords
+AFS Nagios Ubik afs-monitor -hV kaserver ptserver udebug util vlserver
+
 =head1 NAME
 
 check_afs_udebug - Check AFS servers for blocked connections in Nagios
@@ -206,8 +209,8 @@ Russ Allbery <rra@stanford.edu>
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2004, 2010 The Board of Trustees of the Leland Stanford Junior
-University.
+Copyright 2004, 2010, 2013 The Board of Trustees of the Leland Stanford
+Junior University
 
 This program is free software; you may redistribute it and/or modify it
 under the same terms as Perl itself.
