@@ -4,6 +4,7 @@ nagios-plugins-afs (2.3-1) UNRELEASED; urgency=low
     - Fix check_afs_quotas parsing bug when checking a full partition.
     - Ignore bos status output from scheduled jobs in check_afs_bos.
   * Update debhelper compatibility level to V9.
+    - Add ${perl:Depends} to dependencies.
   * Update debian/copyright to copyright-format 1.0.
   * Update standards version to 3.9.4 (no changes required).
 

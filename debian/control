@@ -11,7 +11,7 @@ Vcs-Browser: http://git.eyrie.org/?p=afs/afs-monitor.git
 
 Package: nagios-plugins-afs
 Architecture: all
-Depends: ${misc:Depends}, openafs-client, perl
+Depends: ${misc:Depends}, ${perl:Depends}, openafs-client
 Suggests: nagios3
 Description: Plugins for Nagios to monitor AFS servers
  Nagios is a host/service/network monitoring and management system.  This
