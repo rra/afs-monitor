@@ -11,7 +11,7 @@ our $VERSION = '@VERSION@ @DATE@';
 #
 # Written by Russ Allbery <rra@stanford.edu>
 # Based on an earlier script by Neil Crellin <neilc@stanford.edu>
-# Copyright 2003, 2004, 2010
+# Copyright 2003, 2004, 2010, 2013
 #     The Board of Trustees of the Leland Stanford Junior University
 #
 # This program is free software; you may redistribute it and/or modify it
@@ -166,6 +166,9 @@ exit 0;
 # Documentation
 ##############################################################################
 
+=for stopwords
+AFS Crellin Nagios afs-monitor bos bosserver -hV salvager util
+
 =head1 NAME
 
 check_afs_bos - Monitor AFS bos output for problems in Nagios
@@ -193,7 +196,7 @@ restarted if it happens to be up and running normally each time the probe
 runs; it doesn't pay any attention to the last start time, the last error
 exit status, the presence of core files, and the like.  It mostly just
 looks for the "running normally" part of the B<bos> output and makes sure
-the auxilliary status is also "running normally" for a file server
+the auxiliary status is also "running normally" for a file server
 process.
 
 =head1 OPTIONS
@@ -260,8 +263,8 @@ output, instead just scanning it for acceptable lines.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2003, 2004, 2010 The Board of Trustees of the Leland Stanford
-Junior University.
+Copyright 2003, 2004, 2010, 2013 The Board of Trustees of the Leland
+Stanford Junior University
 
 This program is free software; you may redistribute it and/or modify it
 under the same terms as Perl itself.

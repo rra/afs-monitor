@@ -1,6 +1,6 @@
-# This Makefile contains only a dist rule to generate a distribution
-# tarball, and isn't included in the distribution.  The software doesn't
-# need any compilation, so there are no other rules.
+# This Makefile contains only a dist rule to generate a distribution tarball
+# and a check rule for convenience, and isn't included in the distribution.
+# The software doesn't need any compilation, so there are no other rules.
 
 VERSION := $(shell grep '^afs-monitor' NEWS | head -1 | cut -d' ' -f 2)
 DATE    := $(shell grep '^afs-monitor' NEWS | head -1 | cut -d' ' -f 3)
@@ -23,3 +23,6 @@ dist:
 	tar cf afs-monitor-$(VERSION).tar afs-monitor-$(VERSION)
 	gzip -9 afs-monitor-$(VERSION).tar
 	rm -r afs-monitor-$(VERSION)
+
+check test:
+	prove t/

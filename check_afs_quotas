@@ -238,6 +238,9 @@ if (defined ($volume)) {
 # Documentation
 ##############################################################################
 
+=for stopwords
+AFS Crellin Nagios Rader afs-monitor -hV util -vv
+
 =head1 NAME
 
 check_afs_quotas - Monitor AFS quota usage under Nagios
@@ -252,7 +255,7 @@ B<check_afs_quotas> [B<-hV>] [B<-c> I<threshold>] [B<-w> I<threshold>]
 B<check_afs_quotas> is a Nagios plugin for checking free space in AFS
 volumes based on the allocated quota for the volume.  It uses either C<vos
 examine> or C<vos listvol> to obtain the quota and current usage for
-either a single volume or all volumes on a server or server parittion and
+either a single volume or all volumes on a server or server partition and
 will return an alert if the percentage of quota used is over a threshold.
 By default, it returns a critical error if the used quota is over 90% and
 a warning if it is over 85% (changeable with the B<-c> and B<-w> options).
@@ -358,8 +361,8 @@ Written by Russ Allbery based on a similar script by Steve Rader.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2010 The Board of Trustees of the Leland Stanford Junior
-University.
+Copyright 2010, 2013 The Board of Trustees of the Leland Stanford Junior
+University
 
 This program is free software; you may redistribute it and/or modify it
 under the same terms as Perl itself.

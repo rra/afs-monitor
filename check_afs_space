@@ -10,7 +10,7 @@ our $VERSION = '@VERSION@ @DATE@';
 #
 # Written by Susan Feng <sfeng@stanford.edu>
 # Updated by Russ Allbery <rra@stanford.edu>
-# Copyright 2003, 2004, 2010
+# Copyright 2003, 2004, 2010, 2013
 #     The Board of Trustees of the Leland Stanford Junior University
 #
 # This program is free software; you may redistribute it and/or modify it
@@ -172,6 +172,9 @@ if (@critical) {
 # Documentation
 ##############################################################################
 
+=for stopwords
+AFS Feng Nagios Quanah Rader afs-monitor -dhV mon --perfdata util -vv
+
 =head1 NAME
 
 check_afs_space - Monitor AFS disk space usage under Nagios
@@ -187,7 +190,7 @@ B<check_afs_space> is a Nagios plugin for checking free space on AFS server
 partitions.  It uses C<vos partinfo> to obtain the free space on the
 partitions on an AFS server and will return an alert if the percentage of
 used space exceeds a threshold.  By default, it returns a critical error
-if the used space is over 90% and a warning if it is over 85% (changaable
+if the used space is over 90% and a warning if it is over 85% (changeable
 with the B<-c> and B<-w> options).
 
 If C<vos partinfo> doesn't return within the timeout, B<check_afs_space>
@@ -298,8 +301,8 @@ work by Steve Rader.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2003, 2004, 2010 The Board of Trustees of the Leland Stanford
-Junior University.
+Copyright 2003, 2004, 2010, 2013 The Board of Trustees of the Leland
+Stanford Junior University
 
 This program is free software; you may redistribute it and/or modify it
 under the same terms as Perl itself.

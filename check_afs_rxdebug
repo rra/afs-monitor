@@ -11,7 +11,7 @@ our $VERSION = '@VERSION@ @DATE@';
 #
 # Written by Quanah Gibson-Mount based on work by Neil Crellin
 # Updated by Russ Allbery <rra@stanford.edu>
-# Copyright 2003, 2004, 2005, 2010
+# Copyright 2003, 2004, 2005, 2010, 2013
 #     The Board of Trustees of the Leland Stanford Junior University
 #
 # This program is free software; you may redistribute it and/or modify it
@@ -129,6 +129,9 @@ if ($blocked >= $CRITICAL) {
 # Documentation
 ##############################################################################
 
+=for stopwords
+AFS Crellin Nagios Quanah afs-monitor -hV rxdebug util
+
 =head1 NAME
 
 check_afs_rxdebug - Check AFS servers for blocked connections in Nagios
@@ -226,8 +229,8 @@ options and to use a more uniform coding style.
 
 =head1 COPYRIGHT AND LICENSE
 
-Copyright 2003, 2004, 2005, 2010 The Board of Trustees of the Leland
-Stanford Junior University.
+Copyright 2003, 2004, 2005, 2010, 2013 The Board of Trustees of the Leland
+Stanford Junior University
 
 This program is free software; you may redistribute it and/or modify it
 under the same terms as Perl itself.
