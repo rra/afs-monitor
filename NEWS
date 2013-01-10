@@ -3,7 +3,10 @@
 afs-monitor 2.3 (unreleased)
 
     Fix bug in check_afs_quotas when checking all volumes on a partition
-    that has read-only or backup volumes.
+    that has read-only or backup volumes.  Patch from Georg Sluyterman.
+
+    Correctly ignore bos status output from scheduled jobs in
+    check_afs_bos.  Patch from Georg Sluyterman.
 
 afs-monitor 2.2 (2011-03-03)
 
