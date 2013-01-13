@@ -50,6 +50,7 @@ our @OKAY = (
          \ currently\ running\ normally\.$/x,
     qr/^\s*Auxiliary status is: file server running\.$/,
     qr/^\s*Auxiliary status is: run next at .+$/,
+    qr/^\s*Auxiliary status is: running now\.$/,
     qr/^\s*Process last started at /,
     qr/^\s*Last exit at /,
     qr/^\s*Last error exit at /,
