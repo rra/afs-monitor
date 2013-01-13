@@ -1,3 +1,11 @@
+nagios-plugins-afs (2.4-1) unstable; urgency=low
+
+  * New upstream release.
+    - New -r option to check_afs_quotas to filter volumes by regex.
+    - Ignore bos status from long-running jobs in check_afs_bos.
+
+ -- Russ Allbery <rra@debian.org>  Sat, 12 Jan 2013 19:47:02 -0800
+
 nagios-plugins-afs (2.3-1) unstable; urgency=low
 
   * New upstream release.
