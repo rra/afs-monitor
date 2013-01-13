@@ -1,5 +1,5 @@
 #!/usr/bin/perl -w
-our $VERSION = '2.3 (2013-01-09)';
+our $VERSION = '2.4 (2013-01-12)';
 #
 # check_afs_quotas -- Monitor AFS quota usage under Nagios.
 #
@@ -91,7 +91,7 @@ sub volinfo {
 # in a hash where the keys are volume names and the values are hashes
 # containing 'size' and 'quota' keys and values in KB.
 sub serverinfo {
-    my ($server, $partition) = @_;
+    my ($server, $partition, $regex) = @_;
     my @command = ($VOS, 'listvol', '-server', $server, '-long', '-noauth');
     if (defined ($partition)) {
         push (@command, '-partition', $partition);
@@ -100,14 +100,19 @@ sub serverinfo {
         print "AFS CRITICAL - cannot contact server\n";
         exit 2;
     }
-    my ($volume, %results);
+    my ($volume, $size, %results);
     local $_;
     while (<LVOL>) {
         if (/^(\S+)\s+\d+ RW\s+(\d+) K\s+On-line\s*$/) {
-            $volume = $1;
-            $results{$volume}{size} = $2;
-        } elsif (/^\s+MaxQuota\s+(\d+) K\s*$/) {
-            $results{$volume}{quota} = $1 if defined $volume;
+            ($volume, $size) = ($1, $2);
+            if (!defined ($regex) || $volume =~ /$regex/) {
+                $results{$volume}{size} = $size;
+            } else {
+                $volume = undef;
+            }
+        } elsif (/^\s+MaxQuota\s+(\d+) K\s*$/ && defined $volume) {
+            $results{$volume}{quota} = $1;
+            $volume = undef;
         } elsif (/^\s*$/) { # next volume
             $volume = undef;
         }
@@ -156,12 +161,13 @@ sub syntax {
 }
 
 # Parse command line options.
-my ($help, $host, $partition, $version, $volume);
+my ($help, $host, $partition, $regex, $version, $volume);
 Getopt::Long::config ('bundling', 'no_ignore_case');
 GetOptions ('c|critical=i'  => \$CRITICAL,
             'H|hostname=s'  => \$host,
             'h|help'        => \$help,
             'n|volume=s'    => \$volume,
+            'r|regex=s'     => \$regex,
             'p|partition=s' => \$partition,
             't|timeout=i'   => \$TIMEOUT,
             'V|version'     => \$version,
@@ -178,6 +184,8 @@ if ($help) {
 syntax ("extra arguments on command line") if @ARGV;
 syntax ("host or volume to check not specified")
     unless (defined ($host) || defined ($volume));
+syntax ("regex specified without host to check")
+    if (defined ($regex) && !defined ($host));
 if ($WARNINGS > $CRITICAL) {
     syntax ("warning level $WARNINGS greater than critical level $CRITICAL");
 }
@@ -208,7 +216,7 @@ if (defined ($volume)) {
         exit 0;
     }
 } else {
-    my %results = serverinfo ($host, $partition);
+    my %results = serverinfo ($host, $partition, $regex);
     my (@ok, @warning, @critical);
     for my $volume (keys %results) {
         my ($percent, $summary)
@@ -249,6 +257,7 @@ check_afs_quotas - Monitor AFS quota usage under Nagios
 
 B<check_afs_quotas> [B<-hV>] [B<-c> I<threshold>] [B<-w> I<threshold>]
     [B<-t> I<timeout>] (B<-H> I<host> [B<-p> I<partition>] | B<-n> I<volume>)
+    [B<-r> I<regex>]
 
 =head1 DESCRIPTION
 
@@ -263,7 +272,8 @@ a warning if it is over 85% (changeable with the B<-c> and B<-w> options).
 To check a single volume, specify the volume name with B<-n>.  To check a
 whole server, specify the server name with B<-H>.  You can check only a
 single partition on a server by using the B<-p> option to name the
-partition in combination with B<-H>.
+partition in combination with B<-H>.  When checking an entire server, the
+volumes checked can be filtered by using a regular expression (B<-r>).
 
 If C<vos examine> or C<vos listvol> doesn't return within the timeout,
 B<check_afs_quotas> will return a critical error.  The default timeout is
@@ -304,6 +314,11 @@ Used in combination with the B<-H> option, limits quota checking to a
 particular partition.  The partition can be given in any of the forms
 recognized by the AFS tools (so both the partition letter C<a> and the
 full partition name C</vicepa> will work).
+
+=item B<-r> I<regex>
+
+When processing an entire server (B<-H>), ignore any volumes that don't
+match the specified Perl regular expression.
 
 =item B<-t> I<timeout>, B<--timeout>=I<timeout>
 
