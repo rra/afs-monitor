@@ -1,5 +1,10 @@
                      User-Visible afs-monitor Changes
 
+afs-monitor 2.4 (unreleased)
+
+    Also ignore bos status output from long-running scheduled jobs, such
+    as AFS backups.  Patch from Georg Sluyterman.
+
 afs-monitor 2.3 (2013-01-09)
 
     Fix bug in check_afs_quotas when checking all volumes on a partition
