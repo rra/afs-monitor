@@ -10,7 +10,7 @@ our $VERSION = '@VERSION@ @DATE@';
 # state.  The thresholds can be overridden from the command line.
 #
 # Written by Quanah Gibson-Mount based on work by Neil Crellin
-# Updated by Russ Allbery <rra@stanford.edu>
+# Updated by Russ Allbery <eagle@eyrie.org>
 # Copyright 2003, 2004, 2005, 2010, 2013
 #     The Board of Trustees of the Leland Stanford Junior University
 #
@@ -224,7 +224,7 @@ tools page at L<http://www.eyrie.org/~eagle/software/afs-monitor/>.
 
 The original idea behind this script was from Neil Crellin.  It was
 updated by Quanah Gibson-Mount to work with Nagios, and then further
-updated by Russ Allbery <rra@stanford.edu> to support more standard
+updated by Russ Allbery <eagle@eyrie.org> to support more standard
 options and to use a more uniform coding style.
 
 =head1 COPYRIGHT AND LICENSE

@@ -9,7 +9,7 @@ our $VERSION = '@VERSION@ @DATE@';
 # warning percentage and with status 2 if the free space is below a critical
 # percentage.
 #
-# Written by Russ Allbery <rra@stanford.edu>
+# Written by Russ Allbery <eagle@eyrie.org>
 # Based on a script by Steve Rader
 # Copyright 2010, 2013
 #     The Board of Trustees of the Leland Stanford Junior University

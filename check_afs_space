@@ -9,7 +9,7 @@ our $VERSION = '@VERSION@ @DATE@';
 # percentage (this works with the Nagios check architecture).
 #
 # Written by Susan Feng <sfeng@stanford.edu>
-# Updated by Russ Allbery <rra@stanford.edu>
+# Updated by Russ Allbery <eagle@eyrie.org>
 # Copyright 2003, 2004, 2010, 2013
 #     The Board of Trustees of the Leland Stanford Junior University
 #
@@ -295,7 +295,7 @@ tools page at L<http://www.eyrie.org/~eagle/software/afs-monitor/>.
 
 Originally written by Susan Feng for use with mon.  Updated by Quanah
 Gibson-Mount to work with Nagios, and then further updated by Russ Allbery
-<rra@stanford.edu> to support more standard options and to use a more
+<eagle@eyrie.org> to support more standard options and to use a more
 uniform coding style.  Support for checking a single partition based on
 work by Steve Rader.
 

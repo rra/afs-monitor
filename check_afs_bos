@@ -9,7 +9,7 @@ our $VERSION = '@VERSION@ @DATE@';
 # true, print that information to STDOUT.  Suitable for being run inside
 # Nagios.
 #
-# Written by Russ Allbery <rra@stanford.edu>
+# Written by Russ Allbery <eagle@eyrie.org>
 # Based on an earlier script by Neil Crellin <neilc@stanford.edu>
 # Copyright 2003, 2004, 2010, 2013
 #     The Board of Trustees of the Leland Stanford Junior University
@@ -258,7 +258,7 @@ tools page at L<http://www.eyrie.org/~eagle/software/afs-monitor/>.
 =head1 AUTHORS
 
 The original idea behind this script was from Neil Crellin.  Russ Allbery
-<rra@stanford.edu> updated it to work with Nagios and stripped out some
+<eagle@eyrie.org> updated it to work with Nagios and stripped out some
 rather neat but now unnecessary code to look for any changes in the bos
 output, instead just scanning it for acceptable lines.
 
