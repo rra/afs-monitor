@@ -4,9 +4,9 @@ our $VERSION = '@VERSION@ @DATE@';
 # check_afs_udebug -- Check AFS database servers using udebug for Nagios.
 #
 # Takes a hostname and a port number and checks the udebug output for that
-# host and port.  Reports an error if the recovery state is not 1f on the sync
-# site (ensuring that it considers all of the other servers up-to-date) or if
-# any of the servers don't believe there is a sync site.
+# host and port.  Reports an error if the recovery state is not 1f or 17 on the
+# sync site (ensuring that it considers all of the other servers up-to-date) or
+# if any of the servers don't believe there is a sync site.
 #
 # Written by Russ Allbery <eagle@eyrie.org>
 # Copyright 2004, 2010, 2013
@@ -89,7 +89,7 @@ unless (open (UDEBUG, "$UDEBUG $host $port |")) {
 my ($issync, $recovery, $synchost, $db);
 while (<UDEBUG>) {
     $issync = 1 if /^I am sync site /;
-    $recovery = 1 if /^Recovery state 1f/;
+    $recovery = $1 if /^Recovery state (.*)$/;
     $synchost = 1 if /^Sync host \d+(\.\d+){3} was set /;
     if (/Local db version is (\d+\.\d+)/) {
         $db = "db version $1";
@@ -102,14 +102,14 @@ if ($? != 0) {
 }
 
 # Check the results.
-if ($issync && !$recovery) {
-    print "UBIK CRITICAL - recovery state not 1f\n";
+if ($issync && ($recovery // "") !~ /1[7f]/) {
+    print "UBIK CRITICAL - recovery state not 1f or 17\n";
     exit 2;
 } elsif (!$issync && !$synchost) {
     print "UBIK CRITICAL - no sync site\n";
     exit 2;
 } else {
-    print "UBIK OK - $db\n";
+    print "UBIK OK - $db; state $recovery\n";
     exit 0;
 }
 
