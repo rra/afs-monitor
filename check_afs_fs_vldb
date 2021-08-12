@@ -1,0 +1,226 @@
+#!/usr/bin/perl -w
+our $VERSION = '@VERSION@ @DATE@';
+#
+# check_afs_fs_vldb -- Check VLDB that FS is registered (with the right UUID)
+#
+# Takes a hostname and an optional UUID.  Reports error if FS is not registered
+# (with that UUID).
+#
+# Written by nwf by editing check_afs_ubik, so inherits that file's license:
+#
+# Written by Russ Allbery <eagle@eyrie.org>
+# Copyright 2004, 2010, 2013
+#     The Board of Trustees of the Leland Stanford Junior University
+#
+# This program is free software; you may redistribute it and/or modify it
+# under the same terms as Perl itself.
+
+##############################################################################
+# Modules and declarations
+##############################################################################
+
+require 5.006;
+
+use strict;
+
+use Getopt::Long qw(GetOptions);
+
+##############################################################################
+# Site configuration
+##############################################################################
+
+# The default timeout in seconds (implemented by alarm) for udebug.
+our $TIMEOUT = 10;
+
+# The full path to vos.  Make sure that this is on local disk so that
+# monitoring doesn't have an AFS dependency.
+our ($VOS) = grep { -x $_ } qw(/usr/bin/vos /usr/local/bin/vos);
+$VOS ||= 'vos';
+
+##############################################################################
+# Implementation
+##############################################################################
+
+# Report a syntax error and exit.  We do this via stdout in order to satisfy
+# the Nagios plugin output requirements, but also report a more conventional
+# error via stderr in case people are calling this outside of Nagios.
+sub syntax {
+    print "VOS UNKNOWN - ", join ('', @_), "\n";
+    warn "$0: ", join ('', @_), "\n";
+    exit 3;
+}
+
+# Parse command line options.
+my ($help, $cell, $host, $uuid, $version);
+my @moreaddrs = ( );
+Getopt::Long::config ('bundling', 'no_ignore_case');
+GetOptions ('a|addr=s'     => \@moreaddrs,
+	    'c|cell=s'     => \$cell,
+	    'H|hostname=s' => \$host,
+            'h|help'       => \$help,
+            't|timeout=i'  => \$TIMEOUT,
+            'u|uuid=s'     => \$uuid,
+            'V|version'    => \$version)
+    or syntax ("invalid option");
+if ($help) {
+    print "Feeding myself to perldoc, please wait....\n";
+    exec ('perldoc', '-t', $0) or die "Cannot fork: $!\n";
+} elsif ($version) {
+    my $version = $VERSION;
+    print "check_afs_fs_vldb $version\n";
+    exit 0;
+}
+syntax ("extra arguments on command line") if @ARGV;
+syntax ("host to check not specified") unless (defined $host);
+$cell = (defined $cell) ? "-cell $cell" : "";
+
+# Set up the alarm.
+$SIG{ALRM} = sub {
+    print "VOS CRITICAL - network timeout after $TIMEOUT seconds\n";
+    exit 2;
+};
+alarm ($TIMEOUT);
+
+# Run vos and parse the output.
+unless (open (VOS, "$VOS listaddrs -noauth -printuuid -host $host $cell |")) {
+    warn "$0: cannot run vos: $!\n";
+    exit 3;
+}
+
+my $gotuuid;
+while (my $line = <VOS>) {
+    chomp $line;
+    if ($line =~ /^UUID: (.*)$/) {
+        $gotuuid = $1;
+	next;
+    }
+    @moreaddrs = grep !/$line/, @moreaddrs;
+}
+close VOS;
+if ($? != 0) {
+    print "VOS CRITICAL - Bad result code (server not registered?)\n";
+    exit 2;
+}
+
+# Check the results.
+
+if (defined $uuid) {
+    if (defined $gotuuid) {
+        if ($uuid ne $gotuuid) {
+          print "VOS CRITICAL - Bad UUID (got $gotuuid, expected $uuid)\n";
+          exit 2;
+        }
+    } else {
+        print "VOS CRITICAL - No UUID associated (expected $uuid)\n";
+        exit 2;
+    }
+}
+
+if (scalar @moreaddrs != 0) {
+  print "VOS CRITICAL - Missing registrations for " . (join ",", @moreaddrs) . "\n";
+  exit 2;
+}
+
+print "VOS OK\n";
+exit 0;
+
+##############################################################################
+# Documentation
+##############################################################################
+
+=for stopwords
+AFS Nagios Ubik afs-monitor -hV kaserver ptserver udebug util vlserver
+
+=head1 NAME
+
+check_afs_fs_vldb - Check for VLDB registration of AFS FS
+
+=head1 SYNOPSIS
+
+B<check_afs_fs_vldb> [B<-hV>] [B<-t> I<timeout>] B<-H> I<host> [B<-u> I<UUID>]
+    [B<-a> I<addr>]+
+
+=head1 DESCRIPTION
+
+=head1 OPTIONS
+
+=over 4
+
+=item B<-H> I<host>, B<--hostname>=I<host>
+
+The AFS file server whose VLDB registration is tested
+This option is required.
+
+=item B<-c> I<cell>, B<--cell>=I<cell>
+
+Specify the AFS cell in which to perform the lookup.  The local CellServDB
+must have knowledge of this cell and/or vos must be able to look up cell
+information in DNS.
+
+=item B<-u> I<uuid>, B<--uuid>=I<uuid>
+
+Require that the registration have the given UUID
+
+=item B<-a> I<addr>, B<--addr>=I<addr>
+
+Add an additional address which must be present in the returned lookup.
+
+=item B<-t> I<timeout>, B<--timeout>=I<timeout>
+
+Change the timeout for the B<udebug> command.  The default timeout is 60
+seconds.
+
+=item B<-h>, B<--help>
+
+Print out this documentation (which is done simply by feeding the script
+to C<perldoc -t>).
+
+=item B<-V>, B<--version>
+
+Print out the version of B<check_afs_udebug> and quit.
+
+=back
+
+=head1 EXIT STATUS
+
+B<check_afs_fs_vldb> follows the standard Nagios exit status requirements.
+This means that it will exit with status 0 if there are no problems or
+with status 2 if there are critical problems.  For other errors, such as
+invalid syntax, B<check_afs_udebug> will exit with status 3.
+
+=head1 BUGS
+
+The standard B<-v> verbose Nagios plugin option is not supported.  It
+should print out the full B<udebug> output.
+
+The usage message for invalid options and for the B<-h> option doesn't
+conform to Nagios standards.
+
+=head1 CAVEATS
+
+This script does not use the Nagios util library or any of the defaults
+that it provides, which makes it somewhat deficient as a Nagios plugin.
+This is intentional, though, since this script can be used with other
+monitoring systems as well.  It's not clear what a good solution to this
+would be.
+
+=head1 SEE ALSO
+
+This script is part of the afs-monitor package, which includes various AFS
+monitoring plugins for Nagios.  It is available from the AFS monitoring
+tools page at L<http://www.eyrie.org/~eagle/software/afs-monitor/>.
+
+=head1 AUTHORS
+
+Nathaniel Filardo <nwfilardo@gmail.com>
+Russ Allbery <eagle@eyrie.org>
+
+=head1 COPYRIGHT AND LICENSE
+
+Copyright 2004, 2010, 2013 The Board of Trustees of the Leland Stanford
+Junior University
+
+This program is free software; you may redistribute it and/or modify it
+under the same terms as Perl itself.
+
+=cut
